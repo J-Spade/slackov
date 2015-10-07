@@ -49,12 +49,7 @@ class _processThread(threading.Thread):
 			channel = message[u'channel']
 			text = message[u'text']
 
-			private = True
-			for chan in self.channelids:
-				if channel == chan:
-					private = False
-
-			if (private):
+			if (channel not in self.channelids):
 				self.bot.onPrivateMessageReceived(channel, sender, text)
 			else:
 				self.bot.onMessageReceived(channel, sender, text)

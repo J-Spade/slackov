@@ -20,7 +20,6 @@ class _inputThread(threading.Thread):
 			messages = self.client.rtm_read()
 			for message in messages:
 				if (u'text' in message and u'reply_to' not in message):
-					print message
 					self.inputqueue.put(message)
 			time.sleep(1)
 
@@ -30,10 +29,11 @@ class _processThread(threading.Thread):
 
 	keepgoing = True
 
-	def __init__ (self, client, bot, channelids):
+	def __init__ (self, client, bot, channelids, users):
 		self.client = client
 		self.bot = bot
 		self.channelids = channelids
+		self.users = users
 		threading.Thread.__init__ (self)
 
 	def stop (self):
@@ -49,10 +49,17 @@ class _processThread(threading.Thread):
 			channel = message[u'channel']
 			text = message[u'text']
 
+			for id in self.users:
+				text = text.replace(str(id), str(self.users[id]))
+
+			print '::[%s] <%s>: %s' % (channel, self.users[sender], text)
+
 			if (channel not in self.channelids):
 				self.bot.onPrivateMessageReceived(channel, sender, text)
 			else:
 				self.bot.onMessageReceived(channel, sender, text)
+
+
 
 # sends lines from the output queue to the server
 class _outputThread(threading.Thread):
@@ -81,6 +88,9 @@ class Slackbot:
 		self._inputqueue = Queue.Queue(50)
 		self._outputqueue = Queue.Queue(50)
 
+		self.users = {}
+		self.channelids = []
+
 	def start(self):
 
 		self.CLIENT = SlackClient(self.TOKEN)
@@ -90,15 +100,19 @@ class Slackbot:
 		if self.CLIENT.rtm_connect():
 			print 'CONNECTED.'
 			
-			channelids = []
 			channels = json.loads(self.CLIENT.api_call('channels.list', {}))['channels']	
 			for chan in channels:
-				channelids.append(chan['id'])
-			print "CHANNELS:"
-			print channelids
+				self.channelids.append(chan['id'])
+			
+			print 'CHANNELS: %s' % self.channelids
+
+			userlist = json.loads(self.CLIENT.api_call('users.list', {}))['members']
+			for user in userlist:
+				self.users[str(user['id'])] = str(user['name'])
+			print 'USERS: %s' % self.users
 
 			inp = _inputThread(self.CLIENT, self._inputqueue)
-			self.process = _processThread(self.CLIENT, self, channelids)
+			self.process = _processThread(self.CLIENT, self, self.channelids, self.users)
 			out = _outputThread(self.CLIENT, self._outputqueue)
 			inp.start()
 			self.process.start()

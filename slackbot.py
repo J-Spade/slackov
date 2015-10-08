@@ -88,7 +88,7 @@ class Slackbot:
 		self._inputqueue = Queue.Queue(50)
 		self._outputqueue = Queue.Queue(50)
 
-		self.users = {}
+		self.users = {'USLACKBOT': 'slackbot'}
 		self.channelids = []
 
 	def start(self):

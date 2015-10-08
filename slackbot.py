@@ -78,10 +78,11 @@ class _outputThread(threading.Thread):
 
 class Slackbot:
 
-	def __init__ (self, token, client, id):
+	def __init__ (self, token, client, id, avatarsource):
 		
 		self.TOKEN = token
 		self.ID = id
+		self.AVATARSOURCE = avatarsource
 		self.CLIENT = client
 		self._inputqueue = Queue.Queue(50)
 		self._outputqueue = Queue.Queue(50)

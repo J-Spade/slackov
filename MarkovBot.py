@@ -8,18 +8,18 @@ import json
 class MarkovBot(slackbot.Slackbot):
         
 
-	talkBackFreq = 1
+	talkBackFreq = 0.2
 	isLearning = True
-	censorWords = True
+	censorWords = True #not implemented
 
 	STOPWORD = 'BOGON'
         
 	#		key	       come-befores       come-afters
 	dictionary = { STOPWORD : ( [ (STOPWORD, 1) ], [ (STOPWORD, 1) ] ) }
 
-	def __init__(self, token, client, id):
+	def __init__(self, token, client, id, avatarsource):
 
-		slackbot.Slackbot.__init__(self, token, client, id)
+		slackbot.Slackbot.__init__(self, token, client, id, avatarsource)
 		
 		try:
 			self.loadDictionary()
@@ -74,6 +74,9 @@ class MarkovBot(slackbot.Slackbot):
 
 		elif sentByAdmin and ('!quit' in message):
 			self.quit()
+
+		elif ('!avatar' in message):
+			self.sendMessage(target, 'SOURCE OF MY CURRENT AVATAR: <%s>' % self.AVATARSOURCE)
 
 
 #	#	# all other messages handled here

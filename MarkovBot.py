@@ -76,7 +76,7 @@ class MarkovBot(slackbot.Slackbot):
 			self.quit()
 
 		elif ('!avatar' in message):
-			self.sendMessage(target, 'SOURCE OF MY CURRENT AVATAR: <%s>' % self.AVATARSOURCE)
+			self.sendMessage(target, 'SOURCE OF MY CURRENT AVATAR: %s' % self.AVATARSOURCE)
 
 
 #	#	# all other messages handled here

@@ -1,4 +1,5 @@
 import time
+import datetime
 import threading
 import Queue
 import json
@@ -13,7 +14,6 @@ class _inputThread(threading.Thread):
 		self.client = client
 		self.inputqueue = queue
 		threading.Thread.__init__(self)
-		self.setDaemon (True)
 
 	def run (self):
 		while 1:
@@ -22,6 +22,9 @@ class _inputThread(threading.Thread):
 				if (u'text' in message and u'reply_to' not in message):
 					self.inputqueue.put(message)
 			time.sleep(1)
+
+	def stop (self):
+		self._Thread__stop()
 
 
 # takes lines from the input queue, and processes them
@@ -38,6 +41,7 @@ class _processThread(threading.Thread):
 
 	def stop (self):
 		self.keepgoing = False
+		self._Thread__stop()
 
 	def run (self):
 		self.keepgoing = True
@@ -52,7 +56,8 @@ class _processThread(threading.Thread):
 			for id in self.users:
 				text = text.replace(str(id), str(self.users[id]))
 
-			print '::[%s] <%s> %s' % (channel, self.users[sender], text)
+			currtime = str(datetime.datetime.now()).split(' ')[1].split('.')[0]
+			print '::#%s [%s] <%s> %s' % (channel, currtime, self.users[sender], text)
 			if (channel not in self.channelids) or (('<@%s>' % self.users[self.bot.ID]) in text):
 				self.bot.onPrivateMessageReceived(channel, sender, text)
 			else:
@@ -67,7 +72,6 @@ class _outputThread(threading.Thread):
 		self.client = client
 		self.outputqueue = queue
 		threading.Thread.__init__(self)
-		self.setDaemon = True
 
 	def run (self):
 		while 1:
@@ -75,6 +79,9 @@ class _outputThread(threading.Thread):
 			self.client.rtm_send_message(message[u'channel'], message[u'text'])
 			print '>> %s' % message[u'text']
 			time.sleep(1)
+
+	def stop (self):
+		self._Thread__stop()
 
 class Slackbot:
 
@@ -110,12 +117,12 @@ class Slackbot:
 				self.users[str(user['id'])] = str(user['name'])
 			print 'USERS: %s' % self.users
 
-			inp = _inputThread(self.CLIENT, self._inputqueue)
+			self.inp = _inputThread(self.CLIENT, self._inputqueue)
 			self.process = _processThread(self.CLIENT, self, self.channelids, self.users)
-			out = _outputThread(self.CLIENT, self._outputqueue)
-			inp.start()
+			self.out = _outputThread(self.CLIENT, self._outputqueue)
+			self.inp.start()
 			self.process.start()
-			out.start()
+			self.out.start()
 		else:
 			print "Connection Failed."
 
@@ -125,6 +132,8 @@ class Slackbot:
 
 	def quit (self):
 		self.process.stop()
+		self.inp.stop()
+		self.out.stop()
 		self.onQuit()
 
 	def sendMessage (self, channel, text):

@@ -105,6 +105,8 @@ class MarkovBot(slackbot.Slackbot):
 
 		# PMs don't teach the bot anything, but will always get a response (if the bot can provide one)
 		
+		message = message.lower()
+
 		response = self.generateChain(message)
 		if response != '':
 			self.sendMessage(channel, response)

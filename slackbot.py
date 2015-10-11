@@ -19,8 +19,7 @@ class _inputThread(threading.Thread):
 		while 1:
 			messages = self.client.rtm_read()
 			for message in messages:
-				if (u'text' in message and u'reply_to' not in message):
-					self.inputqueue.put(message)
+				self.inputqueue.put(message)
 			time.sleep(1)
 
 	def stop (self):
@@ -49,21 +48,34 @@ class _processThread(threading.Thread):
 		while self.keepgoing:
 
 			message = self.bot._inputqueue.get(True)
-			sender = message[u'user']
-			channel = message[u'channel']
-			text = message[u'text']
-
-			for id in self.users:
-				text = text.replace(str(id), str(self.users[id]))
-
 			currtime = str(datetime.datetime.now()).split(' ')[1].split('.')[0]
-			print '::#%s [%s] <%s> %s' % (channel, currtime, self.users[sender], text)
-			if (channel not in self.channelids) or (('<@%s>' % self.users[self.bot.ID]) in text):
-				self.bot.onPrivateMessageReceived(channel, sender, text)
-			else:
-				self.bot.onMessageReceived(channel, sender, text)
 
+			if (u'type' in message):
+				if (message[u'type'] == 'message'):
+					if (u'subtype' in message):
+						if (message[u'subtype'] == 'channel_join'):
+							id = message[u'user']
+							callargs = {'token': self.TOKEN, 'user': id}
+							info = self.CLIENT.api_call('users.info', callargs)
+							name = json.loads(info)['user']['name']
+							self.bot.users[id] = name
+							print '::[%s] <%s> ((JOINED THE CHANNEL))' % (currtime, name)
+					else:
+						sender = message[u'user']
+						channel = message[u'channel']
+						text = message[u'text']
+						
+						for id in self.users:
+							text = text.replace(str(id), str(self.users[id]))
+			
+						print '::#%s [%s] <%s> %s' % (channel, currtime, self.users[sender], text)
+						if (channel not in self.channelids) or (('<@%s>' % self.users[self.bot.ID]) in text):
+							self.bot.onPrivateMessageReceived(channel, sender, text)
+						else:
+							self.bot.onMessageReceived(channel, sender, text)
+	
 
+		
 
 # sends lines from the output queue to the server
 class _outputThread(threading.Thread):

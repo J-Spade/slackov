@@ -56,7 +56,7 @@ class _processThread(threading.Thread):
 						if (message[u'subtype'] == 'channel_join'):
 							id = message[u'user']
 							callargs = {'token': self.bot.TOKEN, 'user': id}
-							info = self.CLIENT.api_call('users.info', callargs)
+							info = self.client.api_call('users.info', callargs)
 							name = json.loads(info)['user']['name']
 							self.bot.users[id] = name
 							print '::[%s] <%s> ((JOINED THE CHANNEL))' % (currtime, name)

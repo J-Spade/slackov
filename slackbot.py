@@ -55,7 +55,7 @@ class _processThread(threading.Thread):
 					if (u'subtype' in message):
 						if (message[u'subtype'] == 'channel_join'):
 							id = message[u'user']
-							callargs = {'token': self.TOKEN, 'user': id}
+							callargs = {'token': self.bot.TOKEN, 'user': id}
 							info = self.CLIENT.api_call('users.info', callargs)
 							name = json.loads(info)['user']['name']
 							self.bot.users[id] = name

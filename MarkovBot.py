@@ -188,10 +188,21 @@ class MarkovBot(slackbot.Slackbot):
 			if not (self.dictionary.has_key(checkword)):
 				words.remove(checkword)
 
+
 		if len(words) == 0:
 			return ''
 
-		seed = random.choice(words)
+		# see if we can use a word that has more than two or three letters
+		longwords = words
+
+		for word in longwords:
+			if len(word) < 2:
+				longwords.remove(word)
+
+		if len(longwords) > 0:
+			seed = random.choice(longwords)
+		else:
+			seed = random.choice(words)
 
 		chain = ''	
 		

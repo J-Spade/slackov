@@ -8,7 +8,7 @@ import json
 class MarkovBot(slackbot.Slackbot):
         
 
-	talkBackFreq = 0.2
+	talkBackFreq = 0.05
 	isLearning = True
 	censorWords = True #not implemented
 
@@ -196,7 +196,7 @@ class MarkovBot(slackbot.Slackbot):
 		longwords = words
 
 		for word in longwords:
-			if len(word) < 2:
+			if len(word) <= 3:
 				longwords.remove(word)
 
 		if len(longwords) > 0:

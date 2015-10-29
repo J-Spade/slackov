@@ -193,7 +193,7 @@ class MarkovBot(slackbot.Slackbot):
 			return ''
 
 		# see if we can use a word that has more than two or three letters
-		longwords = words
+		longwords = list(words)
 
 		for word in longwords:
 			if len(word) <= 3:

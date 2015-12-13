@@ -3,6 +3,7 @@ import time
 import random
 import pickle
 import json
+import string
 
 
 class MarkovBot(slackbot.Slackbot):
@@ -77,6 +78,10 @@ class MarkovBot(slackbot.Slackbot):
 
 		elif ('!avatar' in message):
 			self.sendMessage(target, 'SOURCE OF MY CURRENT AVATAR: %s' % self.AVATARSOURCE)
+
+		elif ('!nowplaying' in message):
+			songname, songartist = generateSong()
+			self.sendMessage(target, 'Now Playing: "%s", by %s' % (songname, songartist))
 
 
 #	#	# all other messages handled here
@@ -228,7 +233,61 @@ class MarkovBot(slackbot.Slackbot):
 
 		return chain
             
-        
+
+	def generateSong(self):
+		
+		artist = ''
+		addmore = True
+
+		while addmore:
+
+			word = STOPWORD
+			while word == STOPWORD:
+				word = random.choice(self.dictionary.keys())
+
+			if artist == '':
+				artist = word
+			else:
+				artist = artist + word
+
+        		if random.random() > 0.5:
+				addmore = False
+
+		artist = string.capwords(artist)
+
+		title = ''
+		seed = random.choice(self.dictionary.keys())
+		addmore = True
+
+		word = seed
+		
+		while addmore:
+			
+			if title == '':
+				title = word
+			else:
+				title = word + ' ' + title
+			
+			if STOPWORD in self.dictionary.get(word)[1]:
+				addmore = False
+			else:
+				word = self.chooseWordFromList( self.dictionary.get(word)[1] )
+
+		if not STOPWORD in self.dictionary.get(seed)[0]:
+			
+			addmore = True
+
+			while addmore:
+
+				word = self.chooseWordFromList( self.dictionary.get(seed)[0] )
+				title = title + ' ' + word
+				
+				if STOPWORD in self.dictionary.get(word)[0]:
+					addmore = False
+
+		title = string.capwords(title)
+
+		return title, artist
 
 	def saveDictionary(self):
         
@@ -242,7 +301,6 @@ class MarkovBot(slackbot.Slackbot):
 		input = open('Markov_Dict.pkl', 'r')
 		self.dictionary = pickle.load(input)
 		input.close()
-
 
 
 	def toggleLearn(self):

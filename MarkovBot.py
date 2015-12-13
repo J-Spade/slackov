@@ -247,7 +247,7 @@ class MarkovBot(slackbot.Slackbot):
 			if artist == '':
 				artist = word
 			else:
-				artist = artist + word
+				artist = artist + ' ' + word
 
         		if random.random() > 0.5:
 				addmore = False

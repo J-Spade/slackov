@@ -80,7 +80,7 @@ class MarkovBot(slackbot.Slackbot):
 			self.sendMessage(target, 'SOURCE OF MY CURRENT AVATAR: %s' % self.AVATARSOURCE)
 
 		elif ('!nowplaying' in message):
-			songname, songartist = generateSong()
+			songname, songartist = self.generateSong()
 			self.sendMessage(target, 'Now Playing: "%s", by %s' % (songname, songartist))
 
 

@@ -249,23 +249,26 @@ class MarkovBot(slackbot.Slackbot):
 			else:
 				artist = artist + ' ' + word
 
-        		if random.random() > 0.5:
+        		if random.random() > 0.3:
 				addmore = False
 
 		artist = string.capwords(artist)
 
 		title = ''
-		seed = random.choice(self.dictionary.keys())
+		seed = self.STOPWORD
+		while seed == self.STOPWORD
+			seed = random.choice(self.dictionary.keys())
 		addmore = True
 
 		word = seed
 		
+		# forwards
 		while addmore:
-			
+			print word
 			if title == '':
 				title = word
 			else:
-				title = word + ' ' + title
+				title = title + ' ' + word
 			
 			for thing in self.dictionary.get(word)[1]:
 				if thing[0] == self.STOPWORD:
@@ -280,10 +283,11 @@ class MarkovBot(slackbot.Slackbot):
 				addmore = False
 				break
 
+		# backwards
 		while addmore:
-
 			word = self.chooseWordFromList( self.dictionary.get(seed)[0] )
-			title = title + ' ' + word
+			print word
+			title = word + ' ' + title
 			
 			for thing in self.dictionary.get(word)[0]:
 				if thing[0] == self.STOPWORD:

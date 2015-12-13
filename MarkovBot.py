@@ -241,8 +241,8 @@ class MarkovBot(slackbot.Slackbot):
 
 		while addmore:
 
-			word = STOPWORD
-			while word == STOPWORD:
+			word = self.STOPWORD
+			while word == self.STOPWORD:
 				word = random.choice(self.dictionary.keys())
 
 			if artist == '':
@@ -268,12 +268,12 @@ class MarkovBot(slackbot.Slackbot):
 			else:
 				title = word + ' ' + title
 			
-			if STOPWORD in self.dictionary.get(word)[1]:
+			if self.STOPWORD in self.dictionary.get(word)[1]:
 				addmore = False
 			else:
 				word = self.chooseWordFromList( self.dictionary.get(word)[1] )
 
-		if not STOPWORD in self.dictionary.get(seed)[0]:
+		if not self.STOPWORD in self.dictionary.get(seed)[0]:
 			
 			addmore = True
 
@@ -282,7 +282,7 @@ class MarkovBot(slackbot.Slackbot):
 				word = self.chooseWordFromList( self.dictionary.get(seed)[0] )
 				title = title + ' ' + word
 				
-				if STOPWORD in self.dictionary.get(word)[0]:
+				if self.STOPWORD in self.dictionary.get(word)[0]:
 					addmore = False
 
 		title = string.capwords(title)

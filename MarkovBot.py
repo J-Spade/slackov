@@ -256,7 +256,7 @@ class MarkovBot(slackbot.Slackbot):
 
 		title = ''
 		seed = self.STOPWORD
-		while seed == self.STOPWORD
+		while seed == self.STOPWORD:
 			seed = random.choice(self.dictionary.keys())
 		addmore = True
 

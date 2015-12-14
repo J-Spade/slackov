@@ -195,6 +195,9 @@ class MarkovBot(slackbot.Slackbot):
 		if len(words) < 2:
 			return ''
 		
+		if self.users[self.bot.id] in self.words[0]:
+			del words[0]
+
 		# remove stuff we don't know
 		wordpair = ''
 		index = 0

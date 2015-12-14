@@ -249,7 +249,7 @@ class MarkovBot(slackbot.Slackbot):
 			else:
 				artist = artist + ' ' + word
 
-        		if random.random() < 0.3:
+        		if random.random() < 0.5:
 				addmore = False
 
 		artist = string.capwords(artist)

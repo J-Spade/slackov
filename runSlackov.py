@@ -1,4 +1,4 @@
-from MarkovBot import MarkovBot
+from MarkovBotTwo import MarkovBot
 import time
 import threading
 import os.path

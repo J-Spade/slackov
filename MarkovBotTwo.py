@@ -204,7 +204,7 @@ class MarkovBot(slackbot.Slackbot):
 			if self.dictionary.has_key(wordpair):
 				seedcandidates.append(wordpair)
 			index = index + 1
-		if len(seedcandidates == 0):
+		if len(seedcandidates) == 0:
 			return ''
 
 		chain = ''	

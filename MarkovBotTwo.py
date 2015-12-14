@@ -195,7 +195,7 @@ class MarkovBot(slackbot.Slackbot):
 		if len(words) < 2:
 			return ''
 		
-		if self.users[self.ID] in words[0]:
+		if ('<@%s>' % self.users[self.ID]) in words[0]:
 			del words[0]
 
 		# remove stuff we don't know

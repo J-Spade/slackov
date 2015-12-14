@@ -192,11 +192,11 @@ class MarkovBot(slackbot.Slackbot):
 		words.append(self.STOPWORD)
 		words.insert(0, self.STOPWORD)
 
+		if ('<@%s>' % self.users[self.ID]) in words[1]:
+			del words[1]
+
 		if len(words) < 2:
 			return ''
-		
-		if ('<@%s>' % self.users[self.ID]) in words[0]:
-			del words[0]
 
 		# remove stuff we don't know
 		wordpair = ''

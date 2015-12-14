@@ -224,7 +224,7 @@ class MarkovBot(slackbot.Slackbot):
 
 		# forwards
 		wordpair = seed
-		if (self.dictionary.has_key(wordpair):
+		if (self.dictionary.has_key(wordpair)):
 			chain = wordpair
 		#print wordpair
             	while (wordpair.split()[1] != self.STOPWORD) and (self.dictionary.has_key(wordpair)):

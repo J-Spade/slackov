@@ -65,8 +65,30 @@ class MarkovBot(slackbot.Slackbot):
 			self.toggleLearn()
 			self.sendMessage(target, 'I AM ' + ('NOW' if self.isLearning else 'NO LONGER') + ' LEARNING')
 			return 
+		
+		elif ('!search' in message):
+			try:
+				searchterms = message.split()[1:]
 
-		elif sentByAdmin and ('!talkback' in message):
+				if len(searchterms) == 1:
+					phrases = []
+					for key in self.dictionary:
+						if searchterms[0] in key:
+							phrases.append(key)
+					self.sendMessage(target, '"%s" in pairs: %s' % (searchterms[0], str(phrases))
+
+				else:
+					key = searchterms[0] + ' ' + searchterms[1]
+					if self.dictionary.has_key(key):
+						self.sendMessage(target, '"%s": %s' % (key, str(self.dictionary.get(key)))
+					else:
+						self.sendMessage(target, '"%s" not found in dictionary' % key)
+
+			except IndexError:
+				self.sendMessage(target, 'MALFORMED COMMAND')
+
+
+		elif '!talkback' in message:
 			try:
 				self.talkBackFreq = float(message.split()[1])
 				self.sendMessage(target, ('RESPONDING PROBABILITY SET TO %3f' % self.talkBackFreq))

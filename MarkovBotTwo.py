@@ -36,77 +36,10 @@ class MarkovBot(slackbot.Slackbot):
 		info = self.CLIENT.api_call('users.info', callargs)
 		sentByAdmin = json.loads(info)['user']['is_admin']
 
-
-		# command handling
-		if sentByAdmin and ('!saveDict' in message):
-			
-			try:
-				self.saveDictionary()
-				self.sendMessage(target, 'DICTIONARY SAVED SUCCESSFULLY')
-			except IOError:
-				self.sendMessage(target, 'DICTIONARY COULD NOT BE SAVED')
+		if self.doCommands(target, sender, message, sentByAdmin):
 			return
-                
-		elif sentByAdmin and ('!loadDict' in message):
-			
-			try:
-				self.loadDictionary()
-				self.sendMessage(target, 'DICTIONARY LOADED SUCCESSFULLY')
-			except IOError:
-				self.sendMessage(target, 'DICTIONARY COULD NOT BE LOADED')
-			return		
 
-		elif sentByAdmin and ('!eraseDict' in message):
-
-			self.dictionary = { self.STOPWORD : ([self.STOPWORD], [self.STOPWORD]) }
-			self.sendMessage(target, 'DICTIONARY ERASED (NOT SAVED YET)')
-		
-		elif sentByAdmin and ('!learn' in message):
-			self.toggleLearn()
-			self.sendMessage(target, 'I AM ' + ('NOW' if self.isLearning else 'NO LONGER') + ' LEARNING')
-			return 
-		
-		elif ('!search' in message):
-			try:
-				searchterms = message.split()[1:]
-
-				if len(searchterms) == 1:
-					phrases = []
-					for key in self.dictionary:
-						if searchterms[0] == key.split()[0] or (len(key.split()) > 1 and searchterms[0] == key.split()[1]):
-							phrases.append(key)
-					self.sendMessage(target, '"%s" in pairs: %s' % (searchterms[0], str(phrases)))
-				else:
-					key = searchterms[0] + ' ' + searchterms[1]
-					if self.dictionary.has_key(key):
-						self.sendMessage(target, '"%s": %s' % (key, str(self.dictionary.get(key))))
-					else:
-						self.sendMessage(target, '"%s" not found in dictionary' % key)
-
-			except IndexError:
-				self.sendMessage(target, 'MALFORMED COMMAND')
-
-
-		elif '!talkback' in message:
-			try:
-				self.talkBackFreq = float(message.split()[1])
-				self.sendMessage(target, ('RESPONDING PROBABILITY SET TO %3f' % self.talkBackFreq))
-			except IndexError:
-				self.sendMessage(target, 'MALFORMED COMMAND')
-
-		elif sentByAdmin and ('!quit' in message):
-			self.quit()
-
-		elif ('!avatar' in message):
-			self.sendMessage(target, 'SOURCE OF MY CURRENT AVATAR: %s' % self.AVATARSOURCE)
-
-		#elif ('!nowplaying' in message):
-		#	songname, songartist = self.generateSong()
-		#	self.sendMessage(target, 'Now Playing: "%s", by %s' % (songname, songartist))
-
-
-#	#	# all other messages handled here
-		elif sender != 'USLACKBOT':
+		if sender != 'USLACKBOT':
 			
 			message = message.lower()
 
@@ -130,7 +63,14 @@ class MarkovBot(slackbot.Slackbot):
 	def onPrivateMessageReceived (self, channel, sender, message):
 
 		# PMs don't teach the bot anything, but will always get a response (if the bot can provide one)
+
+		callargs = {'token': self.TOKEN, 'user': sender}
+		info = self.CLIENT.api_call('users.info', callargs)
+		sentByAdmin = json.loads(info)['user']['is_admin']
 		
+		if self.doCommands(channel, sender, message, sentByAdmin):
+			return
+
 		message = message.lower()
 
 		response = self.generateChain(message)
@@ -138,6 +78,82 @@ class MarkovBot(slackbot.Slackbot):
 			self.sendMessage(channel, response)
 
 
+	def doCommands(self, channel, sender, message, sentByAdmin):
+
+		if sentByAdmin and ('!saveDict' in message):
+			
+			try:
+				self.saveDictionary()
+				self.sendMessage(target, 'DICTIONARY SAVED SUCCESSFULLY')
+			except IOError:
+				self.sendMessage(target, 'DICTIONARY COULD NOT BE SAVED')
+			return True
+                
+		elif sentByAdmin and ('!loadDict' in message):
+			
+			try:
+				self.loadDictionary()
+				self.sendMessage(target, 'DICTIONARY LOADED SUCCESSFULLY')
+			except IOError:
+				self.sendMessage(target, 'DICTIONARY COULD NOT BE LOADED')
+			return True	
+
+		elif sentByAdmin and ('!eraseDict' in message):
+
+			self.dictionary = { self.STOPWORD : ([self.STOPWORD], [self.STOPWORD]) }
+			self.sendMessage(target, 'DICTIONARY ERASED (NOT SAVED YET)')
+			return True
+		
+		elif sentByAdmin and ('!learn' in message):
+			self.toggleLearn()
+			self.sendMessage(target, 'I AM ' + ('NOW' if self.isLearning else 'NO LONGER') + ' LEARNING')
+			return True
+		
+		elif ('!search' in message):
+			try:
+				searchterms = message.split()[1:]
+
+				if len(searchterms) == 1:
+					phrases = []
+					for key in self.dictionary:
+						if searchterms[0] == key.split()[0] or (len(key.split()) > 1 and searchterms[0] == key.split()[1]):
+							phrases.append(key)
+					self.sendMessage(target, '"%s" in pairs: %s' % (searchterms[0], str(phrases)))
+				else:
+					key = searchterms[0] + ' ' + searchterms[1]
+					if self.dictionary.has_key(key):
+						self.sendMessage(target, '"%s": %s' % (key, str(self.dictionary.get(key))))
+					else:
+						self.sendMessage(target, '"%s" not found in dictionary' % key)
+
+			except IndexError:
+				self.sendMessage(target, 'MALFORMED COMMAND')
+
+			return True
+
+		elif '!talkback' in message:
+			try:
+				self.talkBackFreq = float(message.split()[1])
+				self.sendMessage(target, ('RESPONDING PROBABILITY SET TO %3f' % self.talkBackFreq))
+			except IndexError:
+				self.sendMessage(target, 'MALFORMED COMMAND')
+			
+			return True
+
+		elif sentByAdmin and ('!quit' in message):
+			self.quit()
+			return True
+
+		elif ('!avatar' in message):
+			self.sendMessage(target, 'SOURCE OF MY CURRENT AVATAR: %s' % self.AVATARSOURCE)
+			return True
+
+		#elif ('!nowplaying' in message):
+		#	songname, songartist = self.generateSong()
+		#	self.sendMessage(target, 'Now Playing: "%s", by %s' % (songname, songartist))
+		#	return True
+
+		return False # did not find a command
 
 
 	def onQuit(self):

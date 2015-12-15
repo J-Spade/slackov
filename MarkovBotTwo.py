@@ -78,7 +78,7 @@ class MarkovBot(slackbot.Slackbot):
 			self.sendMessage(channel, response)
 
 
-	def doCommands(self, channel, sender, message, sentByAdmin):
+	def doCommands(self, target, sender, message, sentByAdmin):
 
 		if sentByAdmin and ('!saveDict' in message):
 			

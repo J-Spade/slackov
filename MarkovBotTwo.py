@@ -75,8 +75,7 @@ class MarkovBot(slackbot.Slackbot):
 					for key in self.dictionary:
 						if searchterms[0] in key:
 							phrases.append(key)
-					self.sendMessage(target, '"%s" in pairs: %s' % (searchterms[0], str(phrases))
-
+					self.sendMessage(target, '"%s" in pairs: %s' % (searchterms[0], str(phrases)))
 				else:
 					key = searchterms[0] + ' ' + searchterms[1]
 					if self.dictionary.has_key(key):

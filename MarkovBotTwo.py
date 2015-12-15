@@ -79,7 +79,7 @@ class MarkovBot(slackbot.Slackbot):
 				else:
 					key = searchterms[0] + ' ' + searchterms[1]
 					if self.dictionary.has_key(key):
-						self.sendMessage(target, '"%s": %s' % (key, str(self.dictionary.get(key)))
+						self.sendMessage(target, '"%s": %s' % (key, str(self.dictionary.get(key))))
 					else:
 						self.sendMessage(target, '"%s" not found in dictionary' % key)
 

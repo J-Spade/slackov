@@ -44,12 +44,17 @@ class MarkovBot(slackbot.Slackbot):
 			message = message.lower()
 
 			if self.isLearning:
+				
+				lines = message.split('\n')
 
-				sentences = message.split('. ')
-				for sentence in sentences:
-					if sentence.endswith('.'):	# get rid of last .
-						sentence = sentence[:-1]
-					self.interpretMessage(sentence)
+				for line in lines:
+
+					for sentence in line.split('. ')
+
+						if sentence.endswith('.'):	# get rid of last .
+							sentence = sentence[:-1]
+
+						self.interpretMessage(sentence)
                     
 
              		if random.random() < self.talkBackFreq:

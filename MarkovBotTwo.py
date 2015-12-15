@@ -49,7 +49,7 @@ class MarkovBot(slackbot.Slackbot):
 
 				for line in lines:
 
-					for sentence in line.split('. ')
+					for sentence in line.split('. '):
 
 						if sentence.endswith('.'):	# get rid of last .
 							sentence = sentence[:-1]

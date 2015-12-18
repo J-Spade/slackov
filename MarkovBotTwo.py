@@ -116,6 +116,7 @@ class MarkovBot(slackbot.Slackbot):
 		
 		elif ('!search' in message):
 			try:
+				message = message.lower()
 				searchterms = message.split()[1:]
 
 				if len(searchterms) == 1:

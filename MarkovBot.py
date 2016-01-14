@@ -12,6 +12,7 @@ class MarkovBot(slackbot.Slackbot):
     talkBackFreq = 0.05
     isLearning = True
     censorWords = True #not implemented
+    lastMessages = {}
 
     STOPWORD = 'BOGON'
 
@@ -23,7 +24,7 @@ class MarkovBot(slackbot.Slackbot):
         user_id = slack['id']
         avatarsource = slack['avatarsource']
 
-        slackbot.Slackbot.__init__(self, token, client, id, avatarsource)
+        slackbot.Slackbot.__init__(self, token, client, user_id, avatarsource)
 
         consumer_key = twitter['consumer_key']
         consumer_secret = twitter['consumer_secret']
@@ -41,7 +42,6 @@ class MarkovBot(slackbot.Slackbot):
 
 
     def onMessageReceived(self, target, sender, message):
-
         callargs = {'token': self.TOKEN, 'user': sender}
         info = self.CLIENT.api_call('users.info', callargs)
         sentByAdmin = json.loads(info)['user']['is_admin']
@@ -61,11 +61,13 @@ class MarkovBot(slackbot.Slackbot):
             if random.random() < self.talkBackFreq:
                 response = self.generateChain(message)
                 if response != '':
-                        self.sendMessage(target, response)
+                    self.sendMessage(target, response)
 
+    def onMyMessageReceived(self, channel, message, timestamp):
+        if timestamp not in self.lastMessages:
+            self.lastMessages[timestamp] = message
 
     def onPrivateMessageReceived (self, channel, sender, message):
-
         # PMs don't teach the bot anything, but will always get a response (if the bot can provide one)
 
         callargs = {'token': self.TOKEN, 'user': sender}
@@ -81,9 +83,11 @@ class MarkovBot(slackbot.Slackbot):
         if response != '':
             self.sendMessage(channel, response)
 
-    def onReactionReceived (self, channel, message):
-        if message and self.twitter.isActivated():
-            self.twitter.post(message)
+    def onReactionReceived (self, channel, timestamp):
+        if self.twitter.isActivated():
+            if timestamp in self.lastMessages:
+                message = self.lastMessages[timestamp]
+                self.twitter.post(message)
 
 
     def doCommands(self, target, sender, message, sentByAdmin):
@@ -103,14 +107,16 @@ class MarkovBot(slackbot.Slackbot):
             return True
         elif sentByAdmin and ('!eraseDict' in message):
 
-            self.dictionary = { self.STOPWORD : ([self.STOPWORD], [self.STOPWORD]) }
+            self.dictionary = {
+                self.STOPWORD : ([self.STOPWORD], [self.STOPWORD])
+            }
             self.sendMessage(target, 'DICTIONARY ERASED (NOT SAVED YET)')
             return True
         elif sentByAdmin and ('!learn' in message):
             self.toggleLearn()
-            self.sendMessage(target, 'I AM ' + ('NOW' if self.isLearning else 'NO LONGER') + ' LEARNING')
+            self.sendMessage(target, 'I AM {} LEARNING'.format('NOW' if self.isLearning else 'NO LONGER'))
             return True
-        elif ('!search' in message):
+        elif '!search' in message:
             try:
                 message = message.lower()
                 searchterms = message.split()[1:]
@@ -140,7 +146,7 @@ class MarkovBot(slackbot.Slackbot):
         elif sentByAdmin and ('!quit' in message):
             self.quit()
             return True
-        elif ('!avatar' in message):
+        elif '!avatar' in message:
             self.sendMessage(target, 'SOURCE OF MY CURRENT AVATAR: %s' % self.AVATARSOURCE)
             return True
 
@@ -166,9 +172,10 @@ class MarkovBot(slackbot.Slackbot):
 
         index = 0
         word = words[index]
-        wordpair = words[index] + ' ' + words[index + 1] # cannot be out of range; at least (stop, stop, word, stop, stop)
+        # cannot be out of range; at least (stop, stop, word, stop, stop)
+        wordpair = words[index] + ' ' + words[index + 1]
 
-        while (True):
+        while True:
             try:
                 next = words[index + 2]
                 nextpair = words[index + 1] + ' ' + words[index + 2]
@@ -214,7 +221,7 @@ class MarkovBot(slackbot.Slackbot):
         words.append(self.STOPWORD)
         words.insert(0, self.STOPWORD)
 
-        if ('<@%s>' % self.users[self.ID]) in words[1]:
+        if '<{}>'.format(self.users[self.BOT_ID]) in words[1]:
             del words[1]
 
         if len(words) < 2:

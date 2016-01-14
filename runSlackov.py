@@ -1,12 +1,13 @@
-from MarkovBot import MarkovBot
-import time
 import threading
 import os.path
+from MarkovBot import MarkovBot
 
 def main():
     config_path = "slackov.cfg"
 
-    config_default = "slacktoken,\nslackid,\navatarsource,\ntwitterconsumerkey,\ntwitterconsumersecret,\ntwitteraccesstoken,\ntwitteraccesssecret,\ntwitterid,"
+    config_default = "slacktoken,\nslackid,\navatarsource,\n" \
+                    "twitterconsumerkey,\ntwitterconsumersecret,\n" \
+                    "twitteraccesstoken,\ntwitteraccesssecret,\ntwitterid,"
 
     if os.path.isfile(config_path):
         config_vals = {}
@@ -19,11 +20,22 @@ def main():
                 if val:
                     val = val.strip()
                 config_vals[key] = val
-            except ValueError as e:
-                print "Config file not properly setup. Config: {} missing {} value.\n".format(config_path, line.replace(':',''))
+            except ValueError:
+                error_message = "Config file not properly setup. Config: {} missing {} value.\n"
+                print error_message.format(config_path, line.replace(':', ''))
 
-        slack = {"token":config_vals['slacktoken'],"id":config_vals['slackid'],"avatarsource":config_vals['avatarsource']}
-        twitter = {"consumer_key":config_vals['twitterconsumerkey'],"consumer_secret":config_vals['twitterconsumersecret'],"access_token":config_vals['twitteraccesstoken'],"access_token_secret":config_vals['twitteraccesssecret'],"id":config_vals['twitterid']}
+        slack = {
+            "token": config_vals['slacktoken'],
+            "id": config_vals['slackid'],
+            "avatarsource": config_vals['avatarsource']
+        }
+        twitter = {
+            "consumer_key": config_vals['twitterconsumerkey'],
+            "consumer_secret": config_vals['twitterconsumersecret'],
+            "access_token": config_vals['twitteraccesstoken'],
+            "access_token_secret": config_vals['twitteraccesssecret'],
+            "id": config_vals['twitterid']
+        }
 
         if None in (slack['token'], slack['id'], slack['avatarsource']):
             print "Config file not properly setup. Config file located at {}.\n".format(config_path)

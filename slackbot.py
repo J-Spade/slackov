@@ -64,25 +64,30 @@ class _processThread(threading.Thread):
                         sender = message[u'user']
                         channel = message[u'channel']
                         text = message[u'text']
+                        timestamp = message[u'ts']
 
                         for user_id in self.users:
                             text = text.replace(str(user_id), str(self.users[user_id]))
 
                         print '::#%s [%s] <%s> %s' % (channel, currtime, self.users[sender], text)
-                        if (channel not in self.channelids) or (('<@%s>' % self.users[self.bot.ID]) in text):
+                        if sender is self.bot.BOT_ID:
+                            self.onMyMessageReceived(channel, text, timestamp)
+                        elif channel not in self.channelids:
+                            self.bot.onPrivateMessageReceived(channel, sender, text)
+                        elif '<{}>'.format(self.users[self.bot.BOT_ID]) in text:
                             self.bot.onPrivateMessageReceived(channel, sender, text)
                         else:
                             self.bot.onMessageReceived(channel, sender, text)
                 elif message[u'type'] == 'reaction_added':
-                    if message[u'name'] == 'twitter':
+                    if message[u'reaction'] == 'twitter':
                         sender = message[u'user']
                         item = message[u'item']
                         channel = item[u'channel']
-                        text = item[u'text']
+                        timestamp = item[u'ts']
 
                         print_message = '::#{0} [{1}] <{2}> requested a tweet for "{3}"'
-                        print print_message.format(channel, currtime, self.users[sender], text)
-                        self.bot.onReactionReceived(channel, text)
+                        print print_message.format(channel, currtime, self.users[sender], timestamp)
+                        self.bot.onReactionReceived(channel, timestamp)
 
 
 # sends lines from the output queue to the server
@@ -105,10 +110,14 @@ class _outputThread(threading.Thread):
 
 class Slackbot:
 
-    def __init__(self, token, client, id, avatarsource):
+    inp = None
+    process = None
+    out = None
+
+    def __init__(self, token, client, bot_id, avatarsource):
 
         self.TOKEN = token
-        self.ID = id
+        self.BOT_ID = bot_id
         self.AVATARSOURCE = avatarsource
         self.CLIENT = client
         self._inputqueue = Queue.Queue(50)
@@ -161,6 +170,11 @@ class Slackbot:
 #   # event handling done by subclass
 
     def onMessageReceived(self, channel, sender, message):
+
+        # This function must be overridden by a class that inherits Slackbot.
+        pass
+
+    def onMyMessageReceived(self, channel, message, timestamp):
 
         # This function must be overridden by a class that inherits Slackbot.
         pass

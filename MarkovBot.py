@@ -66,6 +66,7 @@ class MarkovBot(slackbot.Slackbot):
     def onMyMessageReceived(self, channel, message, timestamp):
         if timestamp not in self.lastMessages:
             self.lastMessages[timestamp] = message
+            print self.lastMessages
 
     def onPrivateMessageReceived (self, channel, sender, message):
         # PMs don't teach the bot anything, but will always get a response (if the bot can provide one)
@@ -87,8 +88,9 @@ class MarkovBot(slackbot.Slackbot):
         if self.twitter.isActivated():
             if timestamp in self.lastMessages:
                 message = self.lastMessages[timestamp]
-                self.twitter.post(message)
+                self.twitter.update_status(status=message)
                 del self.lastMessages[timestamp]
+                print 'tweet attempted for [{}]: {}'.format(timestamp, message)
 
 
     def doCommands(self, target, sender, message, sentByAdmin):

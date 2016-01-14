@@ -88,6 +88,7 @@ class MarkovBot(slackbot.Slackbot):
             if timestamp in self.lastMessages:
                 message = self.lastMessages[timestamp]
                 self.twitter.post(message)
+                del self.lastMessages[timestamp]
 
 
     def doCommands(self, target, sender, message, sentByAdmin):

@@ -6,6 +6,7 @@ import json
 
 from slackclient import SlackClient
 
+
 # daemon thread; runs while the bot is running
 # places lines from the server into the input queue
 class _inputThread(threading.Thread):
@@ -88,6 +89,8 @@ class _processThread(threading.Thread):
                         self.bot.onReactionReceived(channel, timestamp)
             elif u'ok' in message:
                 if message[u'ok']:
+                    timestamp = message[u'ts']
+                    text = message[u'text']
                     self.bot.onMyMessageReceived(timestamp, text)
 
 # sends lines from the output queue to the server
@@ -159,6 +162,9 @@ class Slackbot:
 
 
 #   # functionality
+
+    def signal_handler(self, signal, frame):
+        self.quit()
 
     def quit(self):
         self.process.stop()

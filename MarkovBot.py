@@ -39,8 +39,6 @@ class MarkovBot(slackbot.Slackbot):
         except IOError:
             print ('DICTIONARY COULD NOT BE LOADED')
 
-
-
     def onMessageReceived(self, target, sender, message, timestamp):
         callargs = {'token': self.TOKEN, 'user': sender}
         info = self.CLIENT.api_call('users.info', callargs)
@@ -66,7 +64,6 @@ class MarkovBot(slackbot.Slackbot):
     def onMyMessageReceived(self, timestamp, message):
         print 'my message!'
         if timestamp not in self.lastMessages:
-            timestamp = float(timestamp)
             self.lastMessages[timestamp] = message
             print self.lastMessages
 
@@ -87,9 +84,6 @@ class MarkovBot(slackbot.Slackbot):
             self.sendMessage(channel, response)
 
     def onReactionReceived (self, channel, timestamp):
-        timestamp = float(timestamp)
-        print timestamp
-        print self.lastMessages
         if timestamp in self.lastMessages:
             message = self.lastMessages[timestamp]
             print message

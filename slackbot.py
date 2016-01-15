@@ -74,10 +74,11 @@ class _processThread(threading.Thread):
         for user_id in self.users:
             text = text.replace(str(user_id), str(self.users[user_id]))
 
-        print '::#%s [%s] <%s> %s' % (channel, currtime, self.users[sender], text)
+        print '::#{} [{}] <{}> {}'.format(channel, currtime, self.users[sender], text)
+
         if channel not in self.channelids:
             self.bot.on_private_message_received(channel, sender, text)
-        elif '<{}>'.format(self.users[self.bot.BOT_ID]) in text:
+        elif '<@{}>'.format(self.users[self.bot.BOT_ID]) in text:
             self.bot.on_private_message_received(channel, sender, text)
         else:
             self.bot.on_message_received(channel, sender, text)
@@ -108,7 +109,7 @@ class _processThread(threading.Thread):
         info = self.client.api_call('users.info', callargs)
         name = json.loads(info)['user']['name']
         self.bot.users[user_id] = name
-        print '::[%s] <%s> ((JOINED THE CHANNEL))' % (currtime, name)
+        print '::[{}] <{}> ((JOINED THE CHANNEL))'.format(currtime, name)
 
 # sends lines from the output queue to the server
 class _outputThread(threading.Thread):
@@ -176,7 +177,7 @@ class Slackbot:
             self.process.start()
             self.out.start()
         else:
-            print "Connection Failed."
+            print "CONNECTION FAILED"
 
 
 #   # functionality

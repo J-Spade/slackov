@@ -41,7 +41,7 @@ class MarkovBot(slackbot.Slackbot):
 
 
 
-    def onMessageReceived(self, target, sender, message):
+    def onMessageReceived(self, target, sender, message, timestamp):
         callargs = {'token': self.TOKEN, 'user': sender}
         info = self.CLIENT.api_call('users.info', callargs)
         sentByAdmin = json.loads(info)['user']['is_admin']
@@ -63,8 +63,10 @@ class MarkovBot(slackbot.Slackbot):
                 if response != '':
                     self.sendMessage(target, response)
 
-    def onMyMessageReceived(self, channel, message, timestamp):
+    def onMyMessageReceived(self, timestamp, message):
+        print 'my message!'
         if timestamp not in self.lastMessages:
+            timestamp = float(timestamp)
             self.lastMessages[timestamp] = message
             print self.lastMessages
 
@@ -85,13 +87,14 @@ class MarkovBot(slackbot.Slackbot):
             self.sendMessage(channel, response)
 
     def onReactionReceived (self, channel, timestamp):
-        if self.twitter.isActivated():
-            if timestamp in self.lastMessages:
-                message = self.lastMessages[timestamp]
-                self.twitter.update_status(status=message)
-                del self.lastMessages[timestamp]
-                print 'tweet attempted for [{}]: {}'.format(timestamp, message)
-
+        timestamp = float(timestamp)
+        print timestamp
+        print self.lastMessages
+        if timestamp in self.lastMessages:
+            message = self.lastMessages[timestamp]
+            print message
+            self.twitter.post(message)
+            del self.lastMessages[timestamp]
 
     def doCommands(self, target, sender, message, sentByAdmin):
         if sentByAdmin and ('!saveDict' in message):

@@ -70,14 +70,12 @@ class _processThread(threading.Thread):
                             text = text.replace(str(user_id), str(self.users[user_id]))
 
                         print '::#%s [%s] <%s> %s' % (channel, currtime, self.users[sender], text)
-                        if sender is self.bot.BOT_ID:
-                            self.onMyMessageReceived(channel, text, timestamp)
-                        elif channel not in self.channelids:
+                        if channel not in self.channelids:
                             self.bot.onPrivateMessageReceived(channel, sender, text)
                         elif '<{}>'.format(self.users[self.bot.BOT_ID]) in text:
                             self.bot.onPrivateMessageReceived(channel, sender, text)
                         else:
-                            self.bot.onMessageReceived(channel, sender, text)
+                            self.bot.onMessageReceived(channel, sender, text, timestamp)
                 elif message[u'type'] == 'reaction_added':
                     if message[u'reaction'] == 'twitter':
                         sender = message[u'user']
@@ -88,7 +86,9 @@ class _processThread(threading.Thread):
                         print_message = '::#{0} [{1}] <{2}> requested a tweet for "{3}"'
                         print print_message.format(channel, currtime, self.users[sender], timestamp)
                         self.bot.onReactionReceived(channel, timestamp)
-
+            elif u'ok' in message:
+                if message[u'ok']:
+                    self.bot.onMyMessageReceived(timestamp, text)
 
 # sends lines from the output queue to the server
 class _outputThread(threading.Thread):
@@ -101,7 +101,7 @@ class _outputThread(threading.Thread):
     def run(self):
         while 1:
             message = self.outputqueue.get(True)
-            self.client.rtm_send_message(message[u'channel'], message[u'text'])
+            response = self.client.rtm_send_message(message[u'channel'], message[u'text'])
             print '>> %s' % message[u'text']
             time.sleep(1)
 
@@ -138,7 +138,9 @@ class Slackbot:
             channels = json.loads(self.CLIENT.api_call('channels.list', {}))['channels']
             for chan in channels:
                 self.channelids.append(chan['id'])
-
+            privchannels = json.loads(self.CLIENT.api_call('groups.list', {}))['groups']
+            for chan in privchannels:
+                self.channelids.append(chan['id'])
             print 'CHANNELS: %s' % self.channelids
 
             userlist = json.loads(self.CLIENT.api_call('users.list', {}))['members']
@@ -169,12 +171,12 @@ class Slackbot:
 
 #   # event handling done by subclass
 
-    def onMessageReceived(self, channel, sender, message):
+    def onMessageReceived(self, channel, sender, message, timestamp):
 
         # This function must be overridden by a class that inherits Slackbot.
         pass
 
-    def onMyMessageReceived(self, channel, message, timestamp):
+    def onMyMessageReceived(self, timestamp, message):
 
         # This function must be overridden by a class that inherits Slackbot.
         pass

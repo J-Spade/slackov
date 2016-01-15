@@ -1,13 +1,21 @@
 import threading
 import os.path
+import signal
+
 from MarkovBot import MarkovBot
+
 
 def main():
     config_path = "slackov.cfg"
 
-    config_default = "slacktoken,\nslackid,\navatarsource,\n" \
-                    "twitterconsumerkey,\ntwitterconsumersecret,\n" \
-                    "twitteraccesstoken,\ntwitteraccesssecret,\ntwitterid,"
+    config_default = "slacktoken,\n" \
+        "slackid,\n" \
+        "avatarsource,\n" \
+        "twitterconsumerkey,\n" \
+        "twitterconsumersecret,\n" \
+        "twitteraccesstoken,\n" \
+        "twitteraccesssecret,\n" \
+        "twitterid,"
 
     if os.path.isfile(config_path):
         config_vals = {}
@@ -21,7 +29,8 @@ def main():
                     val = val.strip()
                 config_vals[key] = val
             except ValueError:
-                error_message = "Config file not properly setup. Config: {} missing {} value.\n"
+                error_message = "Config file not properly setup. " \
+                                "Config: {} missing {} value.\n"
                 print error_message.format(config_path, line.replace(':', ''))
 
         slack = {
@@ -37,8 +46,11 @@ def main():
             "id": config_vals['twitterid']
         }
 
-        if None in (slack['token'], slack['id'], slack['avatarsource']):
-            print "Config file not properly setup. Config file located at {}.\n".format(config_path)
+        if None in (slack['token'],
+                    slack['id'],
+                    slack['avatarsource']):
+            print "Config file not properly setup. " \
+                    "Config file located at {}.\n".format(config_path)
         else:
             bot = MarkovBot(None, slack, twitter)
             bot.start()
@@ -47,7 +59,8 @@ def main():
             print threading.enumerate()
 
     else:
-        print "Could not find a config file. Creating a new one: {}\n".format(config_path)
+        print "Could not find a config file. " \
+                "Creating a new one: {}\n".format(config_path)
         config_file = open(config_path, 'a')
         config_file.write(config_default)
         config_file.close()

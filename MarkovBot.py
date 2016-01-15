@@ -62,17 +62,14 @@ class MarkovBot(slackbot.Slackbot):
                     self.send_message(target, response)
 
     def on_my_message_received(self, timestamp, message):
-        print 'my message!'
         if timestamp not in self.lastMessages:
             self.lastMessages[timestamp] = message
-            print self.lastMessages
 
     def on_private_message_received(self, channel, sender, message):
         """
         PMs don't teach the bot anything,
         but will always get a response (if the bot can provide one)
         """
-
         callargs = {'token': self.TOKEN, 'user': sender}
         info = self.CLIENT.api_call('users.info', callargs)
         sentByAdmin = json.loads(info)['user']['is_admin']
@@ -89,7 +86,6 @@ class MarkovBot(slackbot.Slackbot):
     def on_reaction_received(self, channel, timestamp):
         if timestamp in self.lastMessages:
             message = self.lastMessages[timestamp]
-            print message
             self.twitter.post(message)
             del self.lastMessages[timestamp]
 

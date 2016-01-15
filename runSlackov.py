@@ -53,7 +53,6 @@ def main():
                     "Config file located at {}.\n".format(config_path)
         else:
             bot = MarkovBot(None, slack, twitter)
-            signal.signal(signal.SIGINT, bot.signal_handler)
             bot.start()
 
             bot.process.join()

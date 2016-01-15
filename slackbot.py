@@ -1,3 +1,4 @@
+"""Imports"""
 import time
 import datetime
 import threading
@@ -24,6 +25,7 @@ class _inputThread(threading.Thread):
             time.sleep(1)
 
     def stop(self):
+        """Stops the input thread from running"""
         self._Thread__stop()
 
 
@@ -40,6 +42,7 @@ class _processThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def stop(self):
+        """Stops the process thread from running"""
         self.keepgoing = False
         self._Thread__stop()
 
@@ -47,51 +50,65 @@ class _processThread(threading.Thread):
         self.keepgoing = True
 
         while self.keepgoing:
-
             message = self.bot._inputqueue.get(True)
             currtime = str(datetime.datetime.now()).split(' ')[1].split('.')[0]
 
-            if u'type' in message:
+            if u'ok' in message:
+                self.process_my_message(message)
+            elif u'type' in message:
                 if message[u'type'] == 'message':
                     if u'subtype' in message:
                         if message[u'subtype'] == 'channel_join':
-                            user_id = message[u'user']
-                            callargs = {'token': self.bot.TOKEN, 'user': user_id}
-                            info = self.client.api_call('users.info', callargs)
-                            name = json.loads(info)['user']['name']
-                            self.bot.users[user_id] = name
-                            print '::[%s] <%s> ((JOINED THE CHANNEL))' % (currtime, name)
+                            self.process_channel_join(message, currtime)
                     else:
-                        sender = message[u'user']
-                        channel = message[u'channel']
-                        text = message[u'text']
-                        timestamp = message[u'ts']
-
-                        for user_id in self.users:
-                            text = text.replace(str(user_id), str(self.users[user_id]))
-
-                        print '::#%s [%s] <%s> %s' % (channel, currtime, self.users[sender], text)
-                        if channel not in self.channelids:
-                            self.bot.onPrivateMessageReceived(channel, sender, text)
-                        elif '<{}>'.format(self.users[self.bot.BOT_ID]) in text:
-                            self.bot.onPrivateMessageReceived(channel, sender, text)
-                        else:
-                            self.bot.onMessageReceived(channel, sender, text, timestamp)
+                        self.process_message(message, currtime)
                 elif message[u'type'] == 'reaction_added':
-                    if message[u'reaction'] == 'twitter':
-                        sender = message[u'user']
-                        item = message[u'item']
-                        channel = item[u'channel']
-                        timestamp = item[u'ts']
+                    self.process_reaction(message, currtime)
 
-                        print_message = '::#{0} [{1}] <{2}> requested a tweet for "{3}"'
-                        print print_message.format(channel, currtime, self.users[sender], timestamp)
-                        self.bot.onReactionReceived(channel, timestamp)
-            elif u'ok' in message:
-                if message[u'ok']:
-                    timestamp = message[u'ts']
-                    text = message[u'text']
-                    self.bot.onMyMessageReceived(timestamp, text)
+    def process_message(self, message, currtime):
+        """Handles processing for normal messages"""
+        sender = message[u'user']
+        channel = message[u'channel']
+        text = message[u'text']
+
+        for user_id in self.users:
+            text = text.replace(str(user_id), str(self.users[user_id]))
+
+        print '::#%s [%s] <%s> %s' % (channel, currtime, self.users[sender], text)
+        if channel not in self.channelids:
+            self.bot.on_private_message_received(channel, sender, text)
+        elif '<{}>'.format(self.users[self.bot.BOT_ID]) in text:
+            self.bot.on_private_message_received(channel, sender, text)
+        else:
+            self.bot.on_message_received(channel, sender, text)
+
+    def process_my_message(self, message):
+        """Handles processing for bot messages"""
+        if message[u'ok']:
+            timestamp = message[u'ts']
+            text = message[u'text']
+            self.bot.on_my_message_received(timestamp, text)
+
+    def process_reaction(self, message, currtime):
+        """Handles processing for reactions (namely twitter reactions)"""
+        if message[u'reaction'] == 'twitter':
+            sender = message[u'user']
+            item = message[u'item']
+            channel = item[u'channel']
+            timestamp = item[u'ts']
+
+            print_message = '::#{} [{}] <{}> requested a tweet for "{}"'
+            print print_message.format(channel, currtime, self.users[sender], timestamp)
+            self.bot.on_reaction_received(channel, timestamp)
+
+    def process_channel_join(self, message, currtime):
+        """Handles processing for channel joins"""
+        user_id = message[u'user']
+        callargs = {'token': self.bot.TOKEN, 'user': user_id}
+        info = self.client.api_call('users.info', callargs)
+        name = json.loads(info)['user']['name']
+        self.bot.users[user_id] = name
+        print '::[%s] <%s> ((JOINED THE CHANNEL))' % (currtime, name)
 
 # sends lines from the output queue to the server
 class _outputThread(threading.Thread):
@@ -104,11 +121,12 @@ class _outputThread(threading.Thread):
     def run(self):
         while 1:
             message = self.outputqueue.get(True)
-            response = self.client.rtm_send_message(message[u'channel'], message[u'text'])
+            self.client.rtm_send_message(message[u'channel'], message[u'text'])
             print '>> %s' % message[u'text']
             time.sleep(1)
 
     def stop(self):
+        """Stops the output thread from running"""
         self._Thread__stop()
 
 class Slackbot:
@@ -130,7 +148,7 @@ class Slackbot:
         self.channelids = []
 
     def start(self):
-
+        """Starts the bot"""
         self.CLIENT = SlackClient(self.TOKEN)
         print self.CLIENT
         print 'CONNECTING...'
@@ -162,42 +180,55 @@ class Slackbot:
 
 
 #   # functionality
-
-    def signal_handler(self, signal, frame):
-        self.quit()
-
     def quit(self):
+        """Quits the bot"""
         self.process.stop()
         self.inp.stop()
         self.out.stop()
-        self.onQuit()
+        self.on_quit()
 
-    def sendMessage (self, channel, text):
+    def send_message(self, channel, text):
+        """Sends a message to the output queue"""
         self._outputqueue.put({u'channel': channel, u'text': text})
 
 #   # event handling done by subclass
 
-    def onMessageReceived(self, channel, sender, message, timestamp):
+    def on_message_received(self, channel, sender, message):
+        """
+        Abstract method to handle received messages.
 
-        # This function must be overridden by a class that inherits Slackbot.
+        This function must be overridden by a class that inherits Slackbot.
+        """
         pass
 
-    def onMyMessageReceived(self, timestamp, message):
+    def on_my_message_received(self, timestamp, message):
+        """
+        Abstract method to handle bot messages.
 
-        # This function must be overridden by a class that inherits Slackbot.
+        This function must be overridden by a class that inherits Slackbot.
+        """
         pass
 
-    def onPrivateMessageReceived(self, channel, sender, message):
+    def on_private_message_received(self, channel, sender, message):
+        """
+        Abstract method to handle received private messages.
 
-        # this function must be overriden by a class that inherits Slackbot.
+        This function must be overridden by a class that inherits Slackbot.
+        """
         pass
 
-    def onReactionReceived(self, channel, sender, message):
+    def on_reaction_received(self, channel, message):
+        """
+        Abstract method to handle received reactions.
 
-        # this function must be overriden by a class that inherits Slackbot.
+        This function must be overridden by a class that inherits Slackbot.
+        """
         pass
 
-    def onQuit(self):
+    def on_quit(self):
+        """
+        Abstract method to handle quitting the bot.
 
-        # this function should be overridden by the class that inherits Slackbot
+        This function must be overridden by a class that inherits Slackbot.
+        """
         pass

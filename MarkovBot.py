@@ -1,13 +1,13 @@
-import slackbot
-from twitbot import TwitterBot
-import time
+"""Imports"""
 import random
 import pickle
 import json
-import string
+import slackbot
 
+from twitbot import TwitterBot
 
 class MarkovBot(slackbot.Slackbot):
+    """Handles chain generation and bot behavior"""
 
     talkBackFreq = 0.05
     isLearning = True
@@ -34,17 +34,17 @@ class MarkovBot(slackbot.Slackbot):
         self.twitter = TwitterBot(consumer_key, consumer_secret, access_token, access_token_secret)
 
         try:
-            self.loadDictionary()
-            print ('DICTIONARY LOADED SUCCESSFULLY')
+            self.load_dictionary()
+            print 'DICTIONARY LOADED SUCCESSFULLY'
         except IOError:
-            print ('DICTIONARY COULD NOT BE LOADED')
+            print 'DICTIONARY COULD NOT BE LOADED'
 
-    def onMessageReceived(self, target, sender, message, timestamp):
+    def on_message_received(self, target, sender, message):
         callargs = {'token': self.TOKEN, 'user': sender}
         info = self.CLIENT.api_call('users.info', callargs)
         sentByAdmin = json.loads(info)['user']['is_admin']
 
-        if self.doCommands(target, sender, message, sentByAdmin):
+        if self.do_commands(target, sender, message, sentByAdmin):
             return
 
         if sender != 'USLACKBOT':
@@ -55,66 +55,71 @@ class MarkovBot(slackbot.Slackbot):
                     for sentence in line.split('. '):
                         if sentence.endswith('.'):  # get rid of last .
                             sentence = sentence[:-1]
-                        self.interpretMessage(sentence)
+                        self.interpret_message(sentence)
             if random.random() < self.talkBackFreq:
-                response = self.generateChain(message)
+                response = self.generate_chain(message)
                 if response != '':
-                    self.sendMessage(target, response)
+                    self.send_message(target, response)
 
-    def onMyMessageReceived(self, timestamp, message):
+    def on_my_message_received(self, timestamp, message):
         print 'my message!'
         if timestamp not in self.lastMessages:
             self.lastMessages[timestamp] = message
             print self.lastMessages
 
-    def onPrivateMessageReceived (self, channel, sender, message):
-        # PMs don't teach the bot anything, but will always get a response (if the bot can provide one)
+    def on_private_message_received(self, channel, sender, message):
+        """
+        PMs don't teach the bot anything,
+        but will always get a response (if the bot can provide one)
+        """
 
         callargs = {'token': self.TOKEN, 'user': sender}
         info = self.CLIENT.api_call('users.info', callargs)
         sentByAdmin = json.loads(info)['user']['is_admin']
 
-        if self.doCommands(channel, sender, message, sentByAdmin):
+        if self.do_commands(channel, sender, message, sentByAdmin):
             return
 
         message = message.lower()
 
-        response = self.generateChain(message)
+        response = self.generate_chain(message)
         if response != '':
-            self.sendMessage(channel, response)
+            self.send_message(channel, response)
 
-    def onReactionReceived (self, channel, timestamp):
+    def on_reaction_received(self, channel, timestamp):
         if timestamp in self.lastMessages:
             message = self.lastMessages[timestamp]
             print message
             self.twitter.post(message)
             del self.lastMessages[timestamp]
 
-    def doCommands(self, target, sender, message, sentByAdmin):
+    def do_commands(self, target, sender, message, sentByAdmin):
         if sentByAdmin and ('!saveDict' in message):
             try:
-                self.saveDictionary()
-                self.sendMessage(target, 'DICTIONARY SAVED SUCCESSFULLY')
+                self.save_dictionary()
+                self.send_message(target, 'DICTIONARY SAVED SUCCESSFULLY')
             except IOError:
-                self.sendMessage(target, 'DICTIONARY COULD NOT BE SAVED')
+                self.send_message(target, 'DICTIONARY COULD NOT BE SAVED')
             return True
         elif sentByAdmin and ('!loadDict' in message):
             try:
-                self.loadDictionary()
-                self.sendMessage(target, 'DICTIONARY LOADED SUCCESSFULLY')
+                self.load_dictionary()
+                self.send_message(target, 'DICTIONARY LOADED SUCCESSFULLY')
             except IOError:
-                self.sendMessage(target, 'DICTIONARY COULD NOT BE LOADED')
+                self.send_message(target, 'DICTIONARY COULD NOT BE LOADED')
             return True
         elif sentByAdmin and ('!eraseDict' in message):
 
             self.dictionary = {
                 self.STOPWORD : ([self.STOPWORD], [self.STOPWORD])
             }
-            self.sendMessage(target, 'DICTIONARY ERASED (NOT SAVED YET)')
+            self.send_message(target, 'DICTIONARY ERASED (NOT SAVED YET)')
             return True
         elif sentByAdmin and ('!learn' in message):
-            self.toggleLearn()
-            self.sendMessage(target, 'I AM {} LEARNING'.format('NOW' if self.isLearning else 'NO LONGER'))
+            self.toggle_learn()
+            print_message = 'I AM {} LEARNING'
+            self.send_message(target,
+                              print_message.format('NOW' if self.isLearning else 'NO LONGER'))
             return True
         elif '!search' in message:
             try:
@@ -124,30 +129,32 @@ class MarkovBot(slackbot.Slackbot):
                 if len(searchterms) == 1:
                     phrases = []
                     for key in self.dictionary:
-                        if searchterms[0] == key.split()[0] or (len(key.split()) > 1 and searchterms[0] == key.split()[1]):
+                        if searchterms[0] == key.split()[0] or \
+                                             (len(key.split()) > 1 and \
+                                             searchterms[0] == key.split()[1]):
                             phrases.append(key)
-                    self.sendMessage(target, '"%s" in pairs: %s' % (searchterms[0], str(phrases)))
+                    self.send_message(target, '"%s" in pairs: %s' % (searchterms[0], str(phrases)))
                 else:
                     key = searchterms[0] + ' ' + searchterms[1]
                     if self.dictionary.has_key(key):
-                        self.sendMessage(target, '"%s": %s' % (key, str(self.dictionary.get(key))))
+                        self.send_message(target, '"%s": %s' % (key, str(self.dictionary.get(key))))
                     else:
-                        self.sendMessage(target, '"%s" not found in dictionary' % key)
+                        self.send_message(target, '"%s" not found in dictionary' % key)
             except IndexError:
-                self.sendMessage(target, 'MALFORMED COMMAND')
+                self.send_message(target, 'MALFORMED COMMAND')
             return True
         elif '!talkback' in message:
             try:
                 self.talkBackFreq = float(message.split()[1])
-                self.sendMessage(target, ('RESPONDING PROBABILITY SET TO %3f' % self.talkBackFreq))
-            except IndexError:
-                self.sendMessage(target, 'MALFORMED COMMAND')
+                self.send_message(target, ('RESPONDING PROBABILITY SET TO %3f' % self.talkBackFreq))
+            except (IndexError, TypeError):
+                self.send_message(target, 'MALFORMED COMMAND')
             return True
         elif sentByAdmin and ('!quit' in message):
             self.quit()
             return True
         elif '!avatar' in message:
-            self.sendMessage(target, 'SOURCE OF MY CURRENT AVATAR: %s' % self.AVATARSOURCE)
+            self.send_message(target, 'SOURCE OF MY CURRENT AVATAR: %s' % self.AVATARSOURCE)
             return True
 
         #elif ('!nowplaying' in message):
@@ -157,7 +164,7 @@ class MarkovBot(slackbot.Slackbot):
 
         return False # did not find a command
 
-    def onQuit(self):
+    def on_quit(self):
         # try:
         #   self.saveDictionary()
         #   print ('DICTIONARY SAVED SUCCESSFULLY')
@@ -165,7 +172,8 @@ class MarkovBot(slackbot.Slackbot):
         #   print ('DICTIONARY COULD NOT BE SAVED')
         pass
 
-    def interpretMessage(self, message):
+    def interpret_message(self, message):
+        """Interprets a message"""
         words = message.split()
         words.append(self.STOPWORD)
         words.insert(0, self.STOPWORD)
@@ -180,33 +188,33 @@ class MarkovBot(slackbot.Slackbot):
                 next = words[index + 2]
                 nextpair = words[index + 1] + ' ' + words[index + 2]
             except IndexError:
-                    # this means we got to the end of the sentence
-                    break
+                # this means we got to the end of the sentence
+                break
 
             # add 'next' as a word that comes after 'wordpair'
             if self.dictionary.has_key(wordpair):
                 temp = self.dictionary.get(wordpair)[1]
-                wordindex = self.wordIndexInList(next, temp)
-                if (wordindex == -1):
-                    temp.append( (next, 1) )
+                wordindex = self.word_index_in_list(next, temp)
+                if wordindex == -1:
+                    temp.append((next, 1))
                 else:
                     prevcount = temp[wordindex][1]
                     temp[wordindex] = (next, prevcount + 1)
             else:
-                self.dictionary[wordpair] = ( [], [(next, 1)] )
+                self.dictionary[wordpair] = ([], [(next, 1)])
 
             # add 'word' as a word that comes before 'nextpair'
             if self.dictionary.has_key(nextpair):
                 othertemp = self.dictionary.get(nextpair)[0]
-                wordindex = self.wordIndexInList(word, othertemp)
-                if (wordindex == -1):
-                    othertemp.append( (word, 1) )
+                wordindex = self.word_index_in_list(word, othertemp)
+                if wordindex == -1:
+                    othertemp.append((word, 1))
                 else:
                     prevcount = othertemp[wordindex][1]
                     othertemp[wordindex] = (word, prevcount + 1)
 
             else:
-                self.dictionary[nextpair] = ( [(word, 1)], [] )
+                self.dictionary[nextpair] = ([(word, 1)], [])
 
             index = index + 1
             word = words[index]
@@ -215,8 +223,8 @@ class MarkovBot(slackbot.Slackbot):
         #print self.dictionary
 
 
-    def generateChain(self, message):
-
+    def generate_chain(self, message):
+        """Generates a Markov chain from a message"""
         words = message.split()
         words.append(self.STOPWORD)
         words.insert(0, self.STOPWORD)
@@ -245,55 +253,65 @@ class MarkovBot(slackbot.Slackbot):
 
         # forwards
         wordpair = seed
-        if (self.dictionary.has_key(wordpair)):
+        if self.dictionary.has_key(wordpair):
             chain = wordpair
         #print wordpair
         while (wordpair.split()[1] != self.STOPWORD) and (self.dictionary.has_key(wordpair)):
-            wordpair = wordpair.split()[1] + ' ' + self.chooseWordFromList( self.dictionary.get(wordpair)[1] )
+            wordpair = wordpair.split()[1] + ' ' + \
+                        self.choose_word_from_list(self.dictionary.get(wordpair)[1])
             #print wordpair
             chain = chain + ' ' + wordpair.split()[1]
 
         # backwards
         wordpair = seed
         if self.dictionary.has_key(wordpair) and wordpair.split()[0] != self.STOPWORD:
-            wordpair = self.chooseWordFromList( self.dictionary.get(wordpair)[0] ) + ' ' + wordpair.split()[0]
+            wordpair = self.choose_word_from_list(
+                self.dictionary.get(wordpair)[0]) + \
+                ' ' + wordpair.split()[0]
         # so we don't have the seed twice
 
 
         while (wordpair.split()[0] != self.STOPWORD) and (self.dictionary.has_key(wordpair)):
             #print wordpair
             chain = wordpair.split()[0] + ' ' + chain
-            wordpair = self.chooseWordFromList( self.dictionary.get(wordpair)[0] ) + ' ' + wordpair.split()[0]
+            wordpair = self.choose_word_from_list(
+                self.dictionary.get(wordpair)[0]) + \
+                ' ' + wordpair.split()[0]
 
         return chain.replace(self.STOPWORD, '')
 
 
-    def saveDictionary(self):
+    def save_dictionary(self):
+        """Save the dictionary to disk"""
         output = open('Markov_Dict.pkl', 'w')
         pickle.dump(self.dictionary, output)
         output.close()
 
 
-    def loadDictionary(self):
+    def load_dictionary(self):
+        """Load the dictionary file"""
         input = open('Markov_Dict.pkl', 'r')
         self.dictionary = pickle.load(input)
         input.close()
 
 
-    def toggleLearn(self):
+    def toggle_learn(self):
+        """Toggles the learning state"""
         self.isLearning = not self.isLearning
 
 
-    def wordIndexInList(self, findword, list):
+    def word_index_in_list(self, findword, list):
+        """Get the index of a word in a list"""
         word = ''
         for index in range( len(list) ):
-            if (list[index][0] == findword):
+            if list[index][0] == findword:
                 return index
         return -1
 
 
 
-    def chooseWordFromList(self, list):
+    def choose_word_from_list(self, list):
+        """Pick a random word from a list"""
         sum = 0
         stops = [0]
 
@@ -307,7 +325,7 @@ class MarkovBot(slackbot.Slackbot):
             rand = 1
 
         for index in range( len(stops) ):
-            if (rand <= stops[index]):
+            if rand <= stops[index]:
                 return list[index - 1][0]
 
         return list[0][0]

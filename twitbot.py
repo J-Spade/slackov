@@ -1,3 +1,4 @@
+"""Imports"""
 import tweepy
 
 
@@ -9,6 +10,7 @@ class TwitterBot:
         self.auth.set_access_token(access_token, access_token_secret)
 
     def is_authenticated(self, api=None):
+        """Checks if it is/can authenticate successfully"""
         if not api:
             api = self.authenticate()
         if api.me().name:
@@ -16,11 +18,13 @@ class TwitterBot:
         return False
 
     def authenticate(self, auth=None):
+        """Authenticate with Twitter using the existing keys"""
         if not auth:
             auth = self.auth
         return tweepy.API(auth)
 
     def post(self, status):
+        """Posts to Twitter using the provided string"""
         api = self.authenticate()
         if self.is_authenticated(api):
             status = api.update_status(status=status)

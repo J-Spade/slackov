@@ -1,11 +1,11 @@
 """Imports"""
 import random
 import pickle
+import copy
 import json
 import slackbot
-import re
 
-from twitbot import TwitterBot
+from twitbot import TwitterBot, clean_url
 
 class MarkovBot(slackbot.Slackbot):
     """Handles chain generation and bot behavior"""
@@ -18,7 +18,8 @@ class MarkovBot(slackbot.Slackbot):
     STOPWORD = 'BOGON'
 
     #       key        come-befores       come-afters
-    dictionary = { STOPWORD : ( [ (STOPWORD, 1) ], [ (STOPWORD, 1) ] ) }
+    DEFAULT_DICTIONARY = {STOPWORD: ([(STOPWORD, 1)], [(STOPWORD, 1)])}
+    dictionary = copy.deepcopy(DEFAULT_DICTIONARY)
 
     def __init__(self, client, slack, twitter):
         token = slack['token']
@@ -109,7 +110,6 @@ class MarkovBot(slackbot.Slackbot):
                 self.send_message(target, 'DICTIONARY COULD NOT BE LOADED')
             return True
         elif sentByAdmin and ('!eraseDict' in message):
-
             self.dictionary = {
                 self.STOPWORD : ([self.STOPWORD], [self.STOPWORD])
             }
@@ -121,11 +121,14 @@ class MarkovBot(slackbot.Slackbot):
             self.send_message(target,
                               print_message.format('NOW' if self.isLearning else 'NO LONGER'))
             return True
+        elif sentByAdmin and ('!cleanURL' in message):
+            self.clean_urls_in_dictionary()
+            self.send_message(target, 'LINKS IN DICTIONARY HAVE BEEN CLEANED')
+            return True
         elif '!search' in message:
             try:
                 message = message.lower()
                 searchterms = message.split()[1:]
-
                 if len(searchterms) == 1:
                     phrases = []
                     for key in self.dictionary:
@@ -180,11 +183,7 @@ class MarkovBot(slackbot.Slackbot):
 
         # find URLs, neaten them up
         for i in range(0, len(words)):
-            if re.match(r'^<https?:\/\/.+\|?.*>$', words[i]):
-                words[i] = words[i][1:-1]
-                if '|' in words[i]:
-                    words[i] = words[i].split('|')[1]
-
+            words[i] = clean_url(words[i])
         index = 0
         word = words[index]
         # cannot be out of range; at least (stop, stop, word, stop, stop)
@@ -201,7 +200,7 @@ class MarkovBot(slackbot.Slackbot):
             # add 'next' as a word that comes after 'wordpair'
             if self.dictionary.has_key(wordpair):
                 temp = self.dictionary.get(wordpair)[1]
-                wordindex = self.word_index_in_list(next, temp)
+                wordindex = word_index_in_list(next, temp)
                 if wordindex == -1:
                     temp.append((next, 1))
                 else:
@@ -213,7 +212,7 @@ class MarkovBot(slackbot.Slackbot):
             # add 'word' as a word that comes before 'nextpair'
             if self.dictionary.has_key(nextpair):
                 othertemp = self.dictionary.get(nextpair)[0]
-                wordindex = self.word_index_in_list(word, othertemp)
+                wordindex = word_index_in_list(word, othertemp)
                 if wordindex == -1:
                     othertemp.append((word, 1))
                 else:
@@ -229,7 +228,6 @@ class MarkovBot(slackbot.Slackbot):
 
         #print self.dictionary
 
-
     def generate_chain(self, message):
         """Generates a Markov chain from a message"""
         words = message.split()
@@ -238,11 +236,7 @@ class MarkovBot(slackbot.Slackbot):
 
         # find URLs, neaten them up
         for i in range(0, len(words)):
-            if re.match(r'^<https?:\/\/.+\|?.*>$', words[i]):
-                words[i] = words[i][1:-1]
-                if '|' in words[i]:
-                    words[i] = words[i].split('|')[1]
-
+            words[i] = clean_url(words[i])
         if '<{}>'.format(self.users[self.BOT_ID]) in words[1]:
             del words[1]
 
@@ -272,14 +266,14 @@ class MarkovBot(slackbot.Slackbot):
         #print wordpair
         while (wordpair.split()[1] != self.STOPWORD) and (self.dictionary.has_key(wordpair)):
             wordpair = wordpair.split()[1] + ' ' + \
-                        self.choose_word_from_list(self.dictionary.get(wordpair)[1])
+                        choose_word_from_list(self.dictionary.get(wordpair)[1])
             #print wordpair
             chain = chain + ' ' + wordpair.split()[1]
 
         # backwards
         wordpair = seed
         if self.dictionary.has_key(wordpair) and wordpair.split()[0] != self.STOPWORD:
-            wordpair = self.choose_word_from_list(
+            wordpair = choose_word_from_list(
                 self.dictionary.get(wordpair)[0]) + \
                 ' ' + wordpair.split()[0]
         # so we don't have the seed twice
@@ -288,12 +282,11 @@ class MarkovBot(slackbot.Slackbot):
         while (wordpair.split()[0] != self.STOPWORD) and (self.dictionary.has_key(wordpair)):
             #print wordpair
             chain = wordpair.split()[0] + ' ' + chain
-            wordpair = self.choose_word_from_list(
+            wordpair = choose_word_from_list(
                 self.dictionary.get(wordpair)[0]) + \
                 ' ' + wordpair.split()[0]
 
         return chain.replace(self.STOPWORD, '')
-
 
     def save_dictionary(self):
         """Save the dictionary to disk"""
@@ -301,45 +294,49 @@ class MarkovBot(slackbot.Slackbot):
         pickle.dump(self.dictionary, output)
         output.close()
 
-
     def load_dictionary(self):
         """Load the dictionary file"""
         input = open('Markov_Dict.pkl', 'r')
         self.dictionary = pickle.load(input)
         input.close()
 
-
     def toggle_learn(self):
         """Toggles the learning state"""
         self.isLearning = not self.isLearning
 
+    def clean_urls_in_dictionary(self):
+        newdict = copy.deepcopy(self.DEFAULT_DICTIONARY)
+        for key in self.dictionary:
+            newkey = key
+            firsts = self.dictionary.get(key)[0]
+            for i in range(0, len(firsts)):
+                firsts[i] = (clean_url(firsts[i][0]), firsts[i][1])
+            seconds = self.dictionary.get(key)[1]
+            for i in range(0, len(seconds)):
+                seconds[i] = (clean_url(seconds[i][0]), seconds[i][1])
+            newkey = clean_url(key)
+            newdict[newkey] = (firsts, seconds)
+        self.dictionary = newdict
 
-    def word_index_in_list(self, findword, list):
-        """Get the index of a word in a list"""
-        word = ''
-        for index in range( len(list) ):
-            if list[index][0] == findword:
-                return index
-        return -1
+def word_index_in_list(findword, word_list):
+    """Get the index of a word in a list"""
+    for index in range(len(word_list)):
+        if word_list[index][0] == findword:
+            return index
+    return -1
 
-
-
-    def choose_word_from_list(self, list):
-        """Pick a random word from a list"""
-        sum = 0
-        stops = [0]
-
-        for pair in list:
-            sum = sum + pair[1]
-            stops.append(sum)
-
-        if sum > 1:
-            rand = random.randint(1, sum)
-        else:
-            rand = 1
-
-        for index in range( len(stops) ):
-            if rand <= stops[index]:
-                return list[index - 1][0]
-
-        return list[0][0]
+def choose_word_from_list(word_list):
+    """Pick a random word from a list"""
+    total = 0
+    stops = [0]
+    for pair in word_list:
+        total = total + pair[1]
+        stops.append(total)
+    if sum > 1:
+        rand = random.randint(1, total)
+    else:
+        rand = 1
+    for index in range(len(stops)):
+        if rand <= stops[index]:
+            return word_list[index - 1][0]
+    return word_list[0][0]

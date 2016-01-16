@@ -17,15 +17,15 @@ for key in dictionary:
 	firsts = dictionary.get(key)[0]
 	for i in range (0, len(firsts)):
 		if re.match(r'^<https?:\/\/.+\|?.*>$', firsts[i][0]):
-			firsts[i][0] = firsts[i][0][1:-1]
+			firsts[i] = (firsts[i][0][1:-1], firsts[i][1])
 			if '|' in firsts[i][0]:
-				firsts = (firsts[i][0].split('|')[1], firsts[1])
+				firsts[i] = (firsts[i][0].split('|')[1], firsts[i][1])
 	seconds = dictionary.get(key)[1]
 	for i in range (0, len(seconds)):
 		if re.match(r'^<https?:\/\/.+\|?.*>$', seconds[i][0]):
-			seconds[i][0] = seconds[i][0][1:-1]
+			seconds[i] = (seconds[i][0][1:-1], seconds[i][1])
 			if '|' in seconds[i][0]:
-				seconds = (seconds[i][0].split('|')[1], seconds[1])
+				seconds[i] = (seconds[i][0].split('|')[1], seconds[i][1])
 	if re.match(r'^<https?:\/\/.+\|?.*>$', key):
 		newkey = newkey[1:-1]
 		if '|' in newkey:

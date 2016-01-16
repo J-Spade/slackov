@@ -27,5 +27,10 @@ class TwitterBot:
         """Posts to Twitter using the provided string"""
         api = self.authenticate()
         if self.is_authenticated(api):
-            status = api.update_status(status=status)
-            print 'tweet attempted'
+            response = api.update_status(status=status)
+            if response:
+                print 'tweet attempted'
+                user = response.user
+                name = user.name
+                id = response.id_str
+                return 'https://twitter.com/{}/status/{}'.format(name, id)

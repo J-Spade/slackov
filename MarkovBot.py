@@ -86,8 +86,10 @@ class MarkovBot(slackbot.Slackbot):
     def on_reaction_received(self, channel, timestamp):
         if timestamp in self.lastMessages:
             message = self.lastMessages[timestamp]
-            self.twitter.post(message)
+            link = self.twitter.post(message)
             del self.lastMessages[timestamp]
+            if link:
+                self.send_message(channel, link)
 
     def do_commands(self, target, sender, message, sentByAdmin):
         if sentByAdmin and ('!saveDict' in message):

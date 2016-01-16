@@ -83,7 +83,7 @@ class TwitterBot:
 
 def is_url(word):
     """Currently does not work"""
-    regex = re.compile(ur'^<http://+[A-z0-9.]*[|>]', re.UNICODE)
+    regex = re.compile(ur'^<https?:\/\/.+\|?.*>', re.UNICODE)
     match = regex.match(word)
     if match:
         return True

@@ -69,10 +69,10 @@ class _processThread(threading.Thread):
         """Handles processing for normal messages"""
         sender = message[u'user']
         channel = message[u'channel']
-        text = message[u'text']
+        text = message[u'text'].encode('utf-8')
 
         for user_id in self.users:
-            text = text.replace(str(user_id), str(self.users[user_id]))
+            text = text.replace(user_id, self.users[user_id])
 
         print '::#{} [{}] <{}> {}'.format(channel, currtime, self.users[sender], text)
 

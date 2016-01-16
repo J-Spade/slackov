@@ -178,13 +178,13 @@ class MarkovBot(slackbot.Slackbot):
         words.append(self.STOPWORD)
         words.insert(0, self.STOPWORD)
 
-	# find URLs, neaten them up
-	for i in range (0, len(words)):
-		if re.match(r'^<https?:\/\/.+\|?.*>$', words[i]):
-			words[i] = words[i][1:-1]
-			if '|' in words[i]:
-				words[i] = words[i].split('|')[1]
-				
+        # find URLs, neaten them up
+        for i in range(0, len(words)):
+            if re.match(r'^<https?:\/\/.+\|?.*>$', words[i]):
+                words[i] = words[i][1:-1]
+                if '|' in words[i]:
+                    words[i] = words[i].split('|')[1]
+
         index = 0
         word = words[index]
         # cannot be out of range; at least (stop, stop, word, stop, stop)
@@ -236,12 +236,12 @@ class MarkovBot(slackbot.Slackbot):
         words.append(self.STOPWORD)
         words.insert(0, self.STOPWORD)
 
-	# find URLs, neaten them up
-	for i in range (0, len(words)):
-		if re.match(r'^<https?:\/\/.+\|?.*>$', words[i]):
-			words[i] = words[i][1:-1]
-			if '|' in words[i]:
-				words[i] = words[i].split('|')[1]
+        # find URLs, neaten them up
+        for i in range(0, len(words)):
+            if re.match(r'^<https?:\/\/.+\|?.*>$', words[i]):
+                words[i] = words[i][1:-1]
+                if '|' in words[i]:
+                    words[i] = words[i].split('|')[1]
 
         if '<{}>'.format(self.users[self.BOT_ID]) in words[1]:
             del words[1]

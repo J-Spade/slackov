@@ -79,6 +79,8 @@ class _processThread(threading.Thread):
         if channel not in self.channelids:
             self.bot.on_private_message_received(channel, sender, text)
         elif '<@{}>'.format(self.users[self.bot.BOT_ID]) in text:
+	    if '<@{}>'.format(self.users[self.bot.BOT_ID]) in text.split()[0]:
+		text = text.split(' ', 1)[1]
             self.bot.on_private_message_received(channel, sender, text)
         else:
             self.bot.on_message_received(channel, sender, text)

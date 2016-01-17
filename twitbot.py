@@ -51,6 +51,7 @@ class TwitterBot:
         running_total = 0
         for index in range(len(words)):
             word = words[index].strip()
+	    next_word = None
             current += clean_url(word)
             running_total += self.get_length_for_word(word)
             # print '[{}] "{}"'.format(running_total, current.encode('utf-8'))

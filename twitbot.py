@@ -1,7 +1,6 @@
 """Imports"""
-import tweepy
 import re
-
+import tweepy
 
 class TwitterBot:
     def __init__(self, consumer_key, consumer_secret,
@@ -35,7 +34,7 @@ class TwitterBot:
         if self.is_authenticated(api):
             responses = []
             tweets = self.compose_tweets(status)
-            # print tweets
+            print tweets
             for tweet in tweets:
                 responses.append(api.update_status(status=tweet))
             base_url = 'https://twitter.com/'
@@ -52,10 +51,7 @@ class TwitterBot:
         running_total = 0
         for index in range(len(words)):
             word = words[index].strip()
-            if is_url(word):
-                current += word[1:-1]
-            else:
-                current += word
+            current += clean_url(word)
             running_total += self.get_length_for_word(word)
             # print '[{}] "{}"'.format(running_total, current.encode('utf-8'))
             if index + 1 < len(words):
@@ -80,11 +76,12 @@ class TwitterBot:
             return self.short_url_length
         return len(word)
 
-
 def is_url(word):
-    """Currently does not work"""
-    regex = re.compile(ur'^<https?:\/\/.+\|?.*>', re.UNICODE)
-    match = regex.match(word)
-    if match:
-        return True
-    return False
+    return re.match(r'^<https?:\/\/.+\|?.*>$', word)
+
+def clean_url(word):
+    if is_url(word):
+        word = word[1:-1]
+        if '|' in word:
+            word = word.split('|')[1]
+    return word

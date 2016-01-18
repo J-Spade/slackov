@@ -316,7 +316,7 @@ class MarkovBot(slackbot.Slackbot):
 		if end:
 		    break
 		else:
-		    prev = self.choose_word_from_list(self.dictionary.get(currpair)[0])
+		    prev = choose_word_from_list(self.dictionary.get(currpair)[0])
 		    songtitle = prev + ' ' + songtitle
 		    currpair = prev + ' ' + currpair.split()[0]
 	if secondword != self.STOPWORD:
@@ -333,7 +333,7 @@ class MarkovBot(slackbot.Slackbot):
 		if end:
 		    break
 		else:
-		    next = self.choose_word_from_list(self.dictionary.get(currpair)[1])
+		    next = choose_word_from_list(self.dictionary.get(currpair)[1])
 		    songtitle = songtitle + ' ' + next
 		    currpair = currpair.split()[1] + ' ' + next
 	return songtitle, bandname

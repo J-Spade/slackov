@@ -162,7 +162,7 @@ class MarkovBot(slackbot.Slackbot):
 
         elif ('!nowplaying' in message):
            songname, songartist = self.generate_song()
-           self.sendMessage(target, 'Now Playing: "%s", by %s' % (songname, songartist))
+           self.send_message(target, 'Now Playing: "%s", by %s' % (songname, songartist))
            return True
 
         return False # did not find a command

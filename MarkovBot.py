@@ -160,10 +160,10 @@ class MarkovBot(slackbot.Slackbot):
             self.send_message(target, 'SOURCE OF MY CURRENT AVATAR: %s' % self.AVATARSOURCE)
             return True
 
-        #elif ('!nowplaying' in message):
-        #   songname, songartist = self.generateSong()
-        #   self.sendMessage(target, 'Now Playing: "%s", by %s' % (songname, songartist))
-        #   return True
+        elif ('!nowplaying' in message):
+           songname, songartist = self.generate_song()
+           self.sendMessage(target, 'Now Playing: "%s", by %s' % (songname, songartist))
+           return True
 
         return False # did not find a command
 
@@ -287,6 +287,56 @@ class MarkovBot(slackbot.Slackbot):
                 ' ' + wordpair.split()[0]
 
         return chain.replace(self.STOPWORD, '')
+
+    def generate_song(self):
+	bandname = ''
+	while True:
+	    if bandname != '':
+		bandname = bandname + ' '
+	    words = random.choice(self.dictionary.keys()).split()
+	    index = random.randint(0, 1)
+	    if words[index] == self.STOPWORD:
+		bandname = bandname + words[1 - index]
+	    else:
+		bandname = bandname + words[index]
+	    if random.random() > 0.5:
+		break
+	songtitle = ''
+	seed = random.choice(self.dictionary.keys())
+	firstword = seed.split()[0]
+	secondword = seed.split()[1]
+	if firstword != self.STOPWORD:
+	    songtitle = firstword
+	    currpair = seed
+	    while True:
+		end = False
+		for prev in self.dictionary.get(currpair)[0]
+		    if prev[0] == self.STOPWORD:
+			end = True
+		if end:
+		    break
+		else:
+		    prev = self.choose_word_from_list(self.dictionary.get(currpair)[0])
+		    songtitle = prev + ' ' + songtitle
+		    currpair = prev + currpair.split()[0]
+	if secondword != self.STOPWORD:
+	    if songtitle == '':
+		songtitle = secondword
+	    else:
+		songtitle = songtitle + ' ' + secondword
+	    currpair = seed
+	    while True:
+		end = False
+		for next in self.dictionary.get(currpair)[1]
+		    if next[0] == self.STOPWORD:
+			end = True
+		if end:
+		    break
+		else:
+		    next = self.choose_word_from_list(self.dictionary.get(currpair)[1])
+		    songtitle = songtitle + ' ' + next
+		    currpair = currpair.split()[1] + next
+	return songtitle, bandname
 
     def save_dictionary(self):
         """Save the dictionary to disk"""

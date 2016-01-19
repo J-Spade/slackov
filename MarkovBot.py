@@ -130,7 +130,7 @@ class MarkovBot(slackbot.Slackbot):
             try:
                 message = message.lower()
                 searchterms = message.split()[1:]
-		for i in range(1, len(searchterms)):
+		for i in range(0, len(searchterms)):
 		    searchterms[i] = clean_url(searchterms[i])
                 if len(searchterms) == 1:
                     phrases = []

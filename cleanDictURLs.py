@@ -27,7 +27,10 @@ for key in dictionary:
 			if '|' in seconds[i][0]:
 				seconds[i] = (seconds[i][0].split('|')[1], seconds[i][1])
 	keyfirst = key.split()[0]
-	keysecond = key.split()[1]
+	if len(key.split()) > 1:
+	    keysecond = key.split()[1]
+	else:
+	    keysecond = ''
 	if re.match(r'^<https?:\/\/.+\|?.*>$', keyfirst):
 		keyfirst = keyfirst[1:-1]
 		if '|' in keyfirst:
@@ -36,7 +39,9 @@ for key in dictionary:
 		keysecond = keysecond[1:-1]
 		if '|' in keysecond:
 			keysecond = keysecond.split('|')[1]
-	newkey = keyfirst + ' ' + keysecond
+	newkey = keyfirst
+	if keysecond != '':
+	    newkey = newkey + ' ' + keysecond
 	newdict[newkey] = (firsts, seconds)
 
 output = open('Markov_Dict.pkl', 'w')

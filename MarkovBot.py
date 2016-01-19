@@ -364,9 +364,9 @@ class MarkovBot(slackbot.Slackbot):
             seconds = self.dictionary.get(key)[1]
             for i in range(0, len(seconds)):
                 seconds[i] = (clean_url(seconds[i][0]), seconds[i][1])
-	    keyfirst = clean_url(key.split()[0])
-	    keysecond = clean_url(key.split()[1])
-            newkey = keyfirst + ' ' + keysecond
+	    newkey = clean_url(key.split()[0])
+	    if len(key.split()) > 1:
+		newkey = newkey + ' ' + clean_url(key.split()[1])
             newdict[newkey] = (firsts, seconds)
         self.dictionary = newdict
 

@@ -358,14 +358,15 @@ class MarkovBot(slackbot.Slackbot):
     def clean_urls_in_dictionary(self):
         newdict = copy.deepcopy(self.DEFAULT_DICTIONARY)
         for key in self.dictionary:
-            newkey = key
             firsts = self.dictionary.get(key)[0]
             for i in range(0, len(firsts)):
                 firsts[i] = (clean_url(firsts[i][0]), firsts[i][1])
             seconds = self.dictionary.get(key)[1]
             for i in range(0, len(seconds)):
                 seconds[i] = (clean_url(seconds[i][0]), seconds[i][1])
-            newkey = clean_url(key)
+	    keyfirst = clean_url(key.split()[0])
+	    keysecond = clean_url(key.split()[1])
+            newkey = keyfirst + ' ' + keysecond
             newdict[newkey] = (firsts, seconds)
         self.dictionary = newdict
 

@@ -5,6 +5,7 @@ import copy
 import json
 import slackbot
 import string
+import os
 
 from twitbot import TwitterBot, clean_url
 
@@ -99,14 +100,14 @@ class MarkovBot(slackbot.Slackbot):
         if sentByAdmin and ('!saveDict' in message):
             try:
                 self.save_dictionary()
-                self.send_message(target, 'DICTIONARY SAVED SUCCESSFULLY')
+                self.send_message(target, 'DICTIONARY SAVED SUCCESSFULLY (%s bytes)' % str(os.path.getsize('Markov_Dict.pkl')))
             except IOError:
                 self.send_message(target, 'DICTIONARY COULD NOT BE SAVED')
             return True
         elif sentByAdmin and ('!loadDict' in message):
             try:
                 self.load_dictionary()
-                self.send_message(target, 'DICTIONARY LOADED SUCCESSFULLY')
+                self.send_message(target, 'DICTIONARY LOADED SUCCESSFULLY (%s bytes)' % str(os.path.getsize('Markov_Dict.pkl')))
             except IOError:
                 self.send_message(target, 'DICTIONARY COULD NOT BE LOADED')
             return True

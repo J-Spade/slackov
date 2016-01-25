@@ -51,7 +51,7 @@ class _processThread(threading.Thread):
 
         while self.keepgoing:
             message = self.bot._inputqueue.get(True)
-            currtime = str(datetime.datetime.now()).split(' ')[1].split('.')[0]
+            currtime = datetime.datetime.now().encode('utf-8').split(' ')[1].split('.')[0]
 
             if u'ok' in message:
                 self.process_my_message(message)
@@ -169,7 +169,7 @@ class Slackbot:
 
             userlist = json.loads(self.CLIENT.api_call('users.list', {}))['members']
             for user in userlist:
-                self.users[str(user['id'])] = str(user['name'])
+                self.users[user['id'].encode('utf-8')] = user['name'].encode('utf-8')
             print 'USERS: %s' % self.users
 
             self.inp = _inputThread(self.CLIENT, self._inputqueue)

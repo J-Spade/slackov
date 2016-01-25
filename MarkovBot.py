@@ -303,7 +303,7 @@ class MarkovBot(slackbot.Slackbot):
 		bandname = bandname + words[1 - index]
 	    else:
 		bandname = bandname + words[index]
-	    if random.random() > 0.7:
+	    if random.random() > 0.6:
 		break
 	songtitle = ''
 	seed = random.choice(self.dictionary.keys())

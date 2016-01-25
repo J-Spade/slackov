@@ -51,7 +51,7 @@ class _processThread(threading.Thread):
 
         while self.keepgoing:
             message = self.bot._inputqueue.get(True)
-            currtime = datetime.datetime.now().encode('utf-8').split(' ')[1].split('.')[0]
+            currtime = str(datetime.datetime.now()).encode('utf-8').split(' ')[1].split('.')[0]
 
             if u'ok' in message:
                 self.process_my_message(message)

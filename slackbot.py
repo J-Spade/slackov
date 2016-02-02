@@ -63,7 +63,7 @@ class _processThread(threading.Thread):
                     else:
                         self.process_message(message)
                 elif message[u'type'] == 'reaction_added':
-                    self.process_reaction(message, msgtime)
+                    self.process_reaction(message)
 
     def process_message(self, message):
         """Handles processing for normal messages"""
@@ -93,11 +93,12 @@ class _processThread(threading.Thread):
             text = message[u'text']
             self.bot.on_my_message_received(timestamp, text)
 
-    def process_reaction(self, message, currtime):
+    def process_reaction(self, message):
         """Handles processing for reactions (namely twitter reactions)"""
         if message[u'reaction'] == 'twitter':
             sender = message[u'user']
             item = message[u'item']
+	    currtime = message[u'ts']
             channel = item[u'channel']
             timestamp = item[u'ts']
 

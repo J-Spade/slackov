@@ -57,20 +57,20 @@ class _processThread(threading.Thread):
                 self.process_my_message(message)
             elif u'type' in message:
                 if message[u'type'] == 'message':
-		    msgtime = message[u'ts']
                     if u'subtype' in message:
                         if message[u'subtype'] == 'channel_join':
                             self.process_channel_join(message, msgtime)
                     else:
-                        self.process_message(message, msgtime)
+                        self.process_message(message)
                 elif message[u'type'] == 'reaction_added':
                     self.process_reaction(message, msgtime)
 
-    def process_message(self, message, currtime):
+    def process_message(self, message):
         """Handles processing for normal messages"""
         sender = message[u'user']
         channel = message[u'channel']
         text = message[u'text'].encode('utf-8')
+	currtime = message[u'ts']
 
         for user_id in self.users:
             text = text.replace(user_id, self.users[user_id])
@@ -112,6 +112,7 @@ class _processThread(threading.Thread):
         info = self.client.api_call('users.info', callargs)
         name = json.loads(info)['user']['name']
         self.bot.users[user_id] = name
+	currtime = message[u'ts']
         print '::[{}] <{}> ((JOINED THE CHANNEL))'.format(currtime, name)
 
 # sends lines from the output queue to the server

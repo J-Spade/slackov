@@ -52,12 +52,12 @@ class _processThread(threading.Thread):
 
         while self.keepgoing:
             message = self.bot._inputqueue.get(True)
-            msgtime = message[u'ts']
 
             if u'ok' in message:
                 self.process_my_message(message)
             elif u'type' in message:
                 if message[u'type'] == 'message':
+		    msgtime = message[u'ts']
                     if u'subtype' in message:
                         if message[u'subtype'] == 'channel_join':
                             self.process_channel_join(message, msgtime)

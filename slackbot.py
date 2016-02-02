@@ -13,9 +13,10 @@ from slackclient import SlackClient
 class _inputThread(threading.Thread):
 
     def __init__(self, client, queue):
+        threading.Thread.__init__(self)
         self.client = client
         self.inputqueue = queue
-        threading.Thread.__init__(self)
+	self.daemon = True
 
     def run(self):
         while 1:
@@ -35,11 +36,11 @@ class _processThread(threading.Thread):
     keepgoing = True
 
     def __init__(self, client, bot, channelids, users):
+        threading.Thread.__init__(self)
         self.client = client
         self.bot = bot
         self.channelids = channelids
         self.users = users
-        threading.Thread.__init__(self)
 
     def stop(self):
         """Stops the process thread from running"""
@@ -51,7 +52,7 @@ class _processThread(threading.Thread):
 
         while self.keepgoing:
             message = self.bot._inputqueue.get(True)
-            currtime = str(datetime.datetime.now()).encode('utf-8').split(' ')[1].split('.')[0]
+            msgtime = message[u'ts']
 
             if u'ok' in message:
                 self.process_my_message(message)
@@ -59,11 +60,11 @@ class _processThread(threading.Thread):
                 if message[u'type'] == 'message':
                     if u'subtype' in message:
                         if message[u'subtype'] == 'channel_join':
-                            self.process_channel_join(message, currtime)
+                            self.process_channel_join(message, msgtime)
                     else:
-                        self.process_message(message, currtime)
+                        self.process_message(message, msgtime)
                 elif message[u'type'] == 'reaction_added':
-                    self.process_reaction(message, currtime)
+                    self.process_reaction(message, msgtime)
 
     def process_message(self, message, currtime):
         """Handles processing for normal messages"""
@@ -117,9 +118,10 @@ class _processThread(threading.Thread):
 class _outputThread(threading.Thread):
 
     def __init__(self, client, queue):
+        threading.Thread.__init__(self)
         self.client = client
         self.outputqueue = queue
-        threading.Thread.__init__(self)
+	self.daemon = True
 
     def run(self):
         while 1:
@@ -186,8 +188,9 @@ class Slackbot:
     def quit(self):
         """Quits the bot"""
         self.process.stop()
-        self.inp.stop()
-        self.out.stop()
+	## daemon threads should not need this
+        # self.inp.stop()
+        # self.out.stop()
         self.on_quit()
 
     def send_message(self, channel, text):

@@ -41,7 +41,7 @@ class TwitterBot:
 		if lastid == 0:
 		    newtweet = api.update_status(status=tweet)
 		else:
-		    newtweet = api.update_status(status=tweet, lastid)
+		    newtweet = api.update_status(status=tweet, in_reply_to_status_id=lastid)
                 responses.append(newtweet)
 		lastid = newtweet.id
             base_url = 'https://twitter.com/'

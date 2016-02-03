@@ -39,7 +39,7 @@ class MarkovBot(slackbot.Slackbot):
 
         self.twitter = TwitterBot(consumer_key, consumer_secret, access_token, access_token_secret)
 
-	self.fileLock = Lock()
+	self.fileLock = threading.Lock()
 
         try:
             self.load_dictionary()

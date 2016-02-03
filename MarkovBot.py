@@ -6,6 +6,8 @@ import json
 import slackbot
 import string
 import os
+import threading
+import time
 
 from twitbot import TwitterBot, clean_url
 
@@ -40,6 +42,8 @@ class MarkovBot(slackbot.Slackbot):
         try:
             self.load_dictionary()
             print 'DICTIONARY LOADED SUCCESSFULLY'
+	    self.autosaver = _autoSaveThread(self)
+	    self.autosaver.start()
         except IOError:
             print 'DICTIONARY COULD NOT BE LOADED'
 
@@ -372,6 +376,25 @@ class MarkovBot(slackbot.Slackbot):
 		newkey = newkey + ' ' + clean_url(key.split()[1])
             newdict[newkey] = (firsts, seconds)
         self.dictionary = newdict
+
+class _autoSaveThread(threading.Thread):
+
+    def __init__(self, bot):
+	threading.Thread.__init__(self)
+	self.bot = bot
+	self.daemon = True
+
+    def run(self):
+	while 1:
+	    try:
+                bot.save_dictionary()
+                print 'DICTIONARY AUTOSAVED SUCCESSFULLY (%s bytes)' % str(os.path.getsize('Markov_Dict.pkl'))
+            except IOError:
+                print 'COULD NOT AUTOSAVE DICTIONARY'
+	    time.sleep(3600)
+
+    def stop(self):
+        self._Thread__stop()
 
 def word_index_in_list(findword, word_list):
     """Get the index of a word in a list"""

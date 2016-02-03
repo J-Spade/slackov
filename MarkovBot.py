@@ -39,6 +39,8 @@ class MarkovBot(slackbot.Slackbot):
 
         self.twitter = TwitterBot(consumer_key, consumer_secret, access_token, access_token_secret)
 
+	self.fileLock = Lock()
+
         try:
             self.load_dictionary()
             print 'DICTIONARY LOADED SUCCESSFULLY'
@@ -348,15 +350,19 @@ class MarkovBot(slackbot.Slackbot):
 
     def save_dictionary(self):
         """Save the dictionary to disk"""
+	self.fileLock.acquire()
         output = open('Markov_Dict.pkl', 'w')
         pickle.dump(self.dictionary, output)
         output.close()
+	self.fileLock.release()
 
     def load_dictionary(self):
         """Load the dictionary file"""
+	self.fileLock.acquire()
         input = open('Markov_Dict.pkl', 'r')
         self.dictionary = pickle.load(input)
         input.close()
+	self.fileLock.release()
 
     def toggle_learn(self):
         """Toggles the learning state"""

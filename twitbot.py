@@ -35,8 +35,15 @@ class TwitterBot:
             responses = []
             tweets = self.compose_tweets(status)
             print tweets
+	    lastid = 0
             for tweet in tweets:
-                responses.append(api.update_status(status=tweet))
+		newtweet = None
+		if lastid == 0:
+		    newtweet = api.update_status(status=tweet)
+		else:
+		    newtweet = api.update_status(status=tweet, lastid)
+                responses.append(newtweet)
+		lastid = newtweet.id
             base_url = 'https://twitter.com/'
             for response in responses:
                 user = response.user

@@ -98,7 +98,7 @@ class _processThread(threading.Thread):
         if message[u'reaction'] == 'twitter':
             sender = message[u'user']
             item = message[u'item']
-	    currtime = message[u'ts']
+	    currtime = message[u'event_ts']
             channel = item[u'channel']
             timestamp = item[u'ts']
 

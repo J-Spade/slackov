@@ -387,7 +387,7 @@ class _autoSaveThread(threading.Thread):
     def run(self):
 	while 1:
 	    try:
-                bot.save_dictionary()
+                self.bot.save_dictionary()
                 print 'DICTIONARY AUTOSAVED SUCCESSFULLY (%s bytes)' % str(os.path.getsize('Markov_Dict.pkl'))
             except IOError:
                 print 'COULD NOT AUTOSAVE DICTIONARY'

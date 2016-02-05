@@ -146,15 +146,15 @@ class MarkovBot(slackbot.Slackbot):
                                              (len(key.split()) > 1 and \
                                              searchterms[0] == key.split()[1]):
                             phrases.append(key)
-                    self.send_message(target, '"%s" in pairs: %s' % (searchterms[0], str(phrases)))
+                    self.send_message(target, u'"%s" in pairs: %s' % (searchterms[0], str(phrases)))
                 else:
-                    key = searchterms[0] + ' ' + searchterms[1]
+                    key = searchterms[0] + u' ' + searchterms[1]
                     if self.dictionary.has_key(key):
-                        self.send_message(target, '"%s": %s' % (key, str(self.dictionary.get(key))))
+                        self.send_message(target, u'"%s": %s' % (key, str(self.dictionary.get(key))))
                     else:
-                        self.send_message(target, '"%s" not found in dictionary' % key)
+                        self.send_message(target, u'"%s" not found in dictionary' % key)
             except IndexError:
-                self.send_message(target, 'MALFORMED COMMAND')
+                self.send_message(target, u'MALFORMED COMMAND')
             return True
         elif '!talkback' in message:
             try:
@@ -172,7 +172,7 @@ class MarkovBot(slackbot.Slackbot):
 
         elif ('!nowplaying' in message):
            songname, songartist = self.generate_song()
-           self.send_message(target, 'Now Playing: "%s", by %s' % (string.capwords(songname), string.capwords(songartist)))
+           self.send_message(target, u'Now Playing: "%s", by %s' % (string.capwords(songname), string.capwords(songartist)))
            return True
 
         return False # did not find a command
@@ -197,12 +197,12 @@ class MarkovBot(slackbot.Slackbot):
         index = 0
         word = words[index]
         # cannot be out of range; at least (stop, stop, word, stop, stop)
-        wordpair = words[index] + ' ' + words[index + 1]
+        wordpair = words[index] + u' ' + words[index + 1]
 
         while True:
             try:
                 next = words[index + 2]
-                nextpair = words[index + 1] + ' ' + words[index + 2]
+                nextpair = words[index + 1] + u' ' + words[index + 2]
             except IndexError:
                 # this means we got to the end of the sentence
                 break
@@ -234,7 +234,7 @@ class MarkovBot(slackbot.Slackbot):
 
             index = index + 1
             word = words[index]
-            wordpair = word + ' ' + words[index + 1]
+            wordpair = word + u' ' + words[index + 1]
 
         #print self.dictionary
 
@@ -275,34 +275,34 @@ class MarkovBot(slackbot.Slackbot):
             chain = wordpair
         #print wordpair
         while (wordpair.split()[1] != self.STOPWORD) and (self.dictionary.has_key(wordpair)):
-            wordpair = wordpair.split()[1] + ' ' + \
+            wordpair = wordpair.split()[1] + u' ' + \
                         choose_word_from_list(self.dictionary.get(wordpair)[1])
             #print wordpair
-            chain = chain + ' ' + wordpair.split()[1]
+            chain = chain + u' ' + wordpair.split()[1]
 
         # backwards
         wordpair = seed
         if self.dictionary.has_key(wordpair) and wordpair.split()[0] != self.STOPWORD:
             wordpair = choose_word_from_list(
                 self.dictionary.get(wordpair)[0]) + \
-                ' ' + wordpair.split()[0]
+                u' ' + wordpair.split()[0]
         # so we don't have the seed twice
 
 
         while (wordpair.split()[0] != self.STOPWORD) and (self.dictionary.has_key(wordpair)):
             #print wordpair
-            chain = wordpair.split()[0] + ' ' + chain
+            chain = wordpair.split()[0] + u' ' + chain
             wordpair = choose_word_from_list(
                 self.dictionary.get(wordpair)[0]) + \
-                ' ' + wordpair.split()[0]
+                u' ' + wordpair.split()[0]
 
-        return chain.replace(self.STOPWORD, '')
+        return chain.replace(self.STOPWORD, u'')
 
     def generate_song(self):
-	bandname = ''
+	bandname = u''
 	while True:
-	    if bandname != '':
-		bandname = bandname + ' '
+	    if bandname != u'':
+		bandname = bandname + u' '
 	    words = random.choice(self.dictionary.keys()).split()
 	    index = random.randint(0, 1)
 	    if words[index] == self.STOPWORD:
@@ -311,7 +311,7 @@ class MarkovBot(slackbot.Slackbot):
 		bandname = bandname + words[index]
 	    if random.random() > 0.6:
 		break
-	songtitle = ''
+	songtitle = u''
 	seed = random.choice(self.dictionary.keys())
 	firstword = seed.split()[0]
 	secondword = seed.split()[1]
@@ -327,13 +327,13 @@ class MarkovBot(slackbot.Slackbot):
 		    break
 		else:
 		    prev = choose_word_from_list(self.dictionary.get(currpair)[0])
-		    songtitle = prev + ' ' + songtitle
-		    currpair = prev + ' ' + currpair.split()[0]
+		    songtitle = prev + u' ' + songtitle
+		    currpair = prev + u' ' + currpair.split()[0]
 	if secondword != self.STOPWORD:
-	    if songtitle == '':
+	    if songtitle == u'':
 		songtitle = secondword
 	    else:
-		songtitle = songtitle + ' ' + secondword
+		songtitle = songtitle + u' ' + secondword
 	    currpair = seed
 	    while True:
 		end = False
@@ -344,8 +344,8 @@ class MarkovBot(slackbot.Slackbot):
 		    break
 		else:
 		    next = choose_word_from_list(self.dictionary.get(currpair)[1])
-		    songtitle = songtitle + ' ' + next
-		    currpair = currpair.split()[1] + ' ' + next
+		    songtitle = songtitle + u' ' + next
+		    currpair = currpair.split()[1] + u' ' + next
 	return songtitle, bandname
 
     def save_dictionary(self):

@@ -40,7 +40,7 @@ class MarkovBot(slackbot.Slackbot):
         self.twitter = TwitterBot(consumer_key, consumer_secret, access_token, access_token_secret)
 
 	self.fileLock = threading.Lock()
-
+	print 'LOADING DICTIONARY...'
         try:
             self.load_dictionary()
             print 'DICTIONARY LOADED SUCCESSFULLY'

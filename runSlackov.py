@@ -1,11 +1,16 @@
 import threading
 import os.path
 import signal
+import sys  
 
 from MarkovBot import MarkovBot
 
 
 def main():
+
+    reload(sys)  
+    sys.setdefaultencoding('utf8')
+
     config_path = "slackov.cfg"
 
     config_default = "slacktoken,\n" \

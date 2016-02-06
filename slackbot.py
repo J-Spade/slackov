@@ -51,7 +51,7 @@ class _processThread(threading.Thread):
         self.keepgoing = True
 
         while self.keepgoing:
-            message = self.bot._inputqueue.get(True).encode('utf-8')
+            message = self.bot._inputqueue.get(True)
 
             if u'ok' in message:
                 self.process_my_message(message)

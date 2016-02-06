@@ -146,11 +146,11 @@ class MarkovBot(slackbot.Slackbot):
                                              (len(key.split()) > 1 and \
                                              searchterms[0] == key.split()[1]):
                             phrases.append(key)
-                    self.send_message(target, u'"%s" in pairs: %s' % (searchterms[0], phrases.encode('utf-8')))
+                    self.send_message(target, u'"%s" in pairs: %s' % (searchterms[0], str(phrases)))
                 else:
                     key = searchterms[0] + u' ' + searchterms[1]
                     if self.dictionary.has_key(key):
-                        self.send_message(target, u'"%s": %s' % (key, self.dictionary.get(key).encode('utf-8')))
+                        self.send_message(target, u'"%s": %s' % (key, str(self.dictionary.get(key))))
                     else:
                         self.send_message(target, u'"%s" not found in dictionary' % key)
             except IndexError:

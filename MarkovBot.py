@@ -60,10 +60,10 @@ class MarkovBot(slackbot.Slackbot):
         if sender != 'USLACKBOT':
             message = message.lower()
             if self.isLearning:
-                lines = message.split('\n')
+                lines = message.split(u'\n')
                 for line in lines:
-                    for sentence in line.split('. '):
-                        if sentence.endswith('.'):  # get rid of last .
+                    for sentence in line.split(u'. '):
+                        if sentence.endswith(u'.'):  # get rid of last .
                             sentence = sentence[:-1]
                         self.interpret_message(sentence)
             if random.random() < self.talkBackFreq:
@@ -146,11 +146,11 @@ class MarkovBot(slackbot.Slackbot):
                                              (len(key.split()) > 1 and \
                                              searchterms[0] == key.split()[1]):
                             phrases.append(key)
-                    self.send_message(target, u'"%s" in pairs: %s' % (searchterms[0], str(phrases)))
+                    self.send_message(target, u'"%s" in pairs: %s' % (searchterms[0], phrases.encode('utf-8')))
                 else:
                     key = searchterms[0] + u' ' + searchterms[1]
                     if self.dictionary.has_key(key):
-                        self.send_message(target, u'"%s": %s' % (key, str(self.dictionary.get(key))))
+                        self.send_message(target, u'"%s": %s' % (key, self.dictionary.get(key).encode('utf-8')))
                     else:
                         self.send_message(target, u'"%s" not found in dictionary' % key)
             except IndexError:

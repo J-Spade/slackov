@@ -39,7 +39,7 @@ class MarkovBot(slackbot.Slackbot):
 
         self.twitter = TwitterBot(consumer_key, consumer_secret, access_token, access_token_secret)
 
-	self.fileLock = threading.Lock()
+	self.dictLock = threading.Lock()
 	print 'LOADING DICTIONARY...'
         try:
             self.load_dictionary()
@@ -187,6 +187,8 @@ class MarkovBot(slackbot.Slackbot):
 
     def interpret_message(self, message):
         """Interprets a message"""
+	
+	self.dictLock.acquire()
         words = message.split()
         words.append(self.STOPWORD)
         words.insert(0, self.STOPWORD)
@@ -237,6 +239,7 @@ class MarkovBot(slackbot.Slackbot):
             wordpair = word + u' ' + words[index + 1]
 
         #print self.dictionary
+	self.dictLock.release()
 
     def generate_chain(self, message):
         """Generates a Markov chain from a message"""
@@ -350,25 +353,26 @@ class MarkovBot(slackbot.Slackbot):
 
     def save_dictionary(self):
         """Save the dictionary to disk"""
-	self.fileLock.acquire()
+	self.dictLock.acquire()
         output = open('Markov_Dict.pkl', 'w')
         pickle.dump(self.dictionary, output)
         output.close()
-	self.fileLock.release()
+	self.dictLock.release()
 
     def load_dictionary(self):
         """Load the dictionary file"""
-	self.fileLock.acquire()
+	self.dictLock.acquire()
         input = open('Markov_Dict.pkl', 'r')
         self.dictionary = pickle.load(input)
         input.close()
-	self.fileLock.release()
+	self.dictLock.release()
 
     def toggle_learn(self):
         """Toggles the learning state"""
         self.isLearning = not self.isLearning
 
     def clean_urls_in_dictionary(self):
+	self.dictLock.acquire()
         newdict = copy.deepcopy(self.DEFAULT_DICTIONARY)
         for key in self.dictionary:
             firsts = self.dictionary.get(key)[0]
@@ -382,6 +386,7 @@ class MarkovBot(slackbot.Slackbot):
 		newkey = newkey + ' ' + clean_url(key.split()[1])
             newdict[newkey] = (firsts, seconds)
         self.dictionary = newdict
+	self.dictLock.release()
 
 class _autoSaveThread(threading.Thread):
 

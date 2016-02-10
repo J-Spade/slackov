@@ -1,6 +1,9 @@
 """Imports"""
 import random
-import pickle
+try:
+   import cPickle as pickle
+except:
+   import pickle
 import copy
 import json
 import slackbot

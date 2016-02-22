@@ -96,6 +96,9 @@ class MarkovBot(slackbot.Slackbot):
         if response != '':
             self.send_message(channel, response)
 
+    def on_name_ping_received(self, channel, sender):
+	self.send_message(channel, '<@%s>' % self.users[sender])
+
     def on_reaction_received(self, channel, timestamp):
         if timestamp in self.lastMessages:
             message = self.lastMessages[timestamp]

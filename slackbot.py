@@ -81,8 +81,11 @@ class _processThread(threading.Thread):
             self.bot.on_private_message_received(channel, sender, text)
         elif '<@{}>'.format(self.users[self.bot.BOT_ID]) in text:
 	    if '<@{}>'.format(self.users[self.bot.BOT_ID]) in text.split()[0]:
-		text = text.split(' ', 1)[1]
-            self.bot.on_private_message_received(channel, sender, text)
+		if len(text.split(' ', 1) > 1:
+			text = text.split(' ', 1)[1]
+            		self.bot.on_private_message_received(channel, sender, text)
+		else:
+			self.bot.on_name_ping_received(channel, sender)
         else:
             self.bot.on_message_received(channel, sender, text)
 
@@ -202,6 +205,14 @@ class Slackbot:
 #   # event handling done by subclass
 
     def on_message_received(self, channel, sender, message):
+        """
+        Abstract method to handle received messages.
+
+        This function must be overridden by a class that inherits Slackbot.
+        """
+        pass
+
+    def on_name_ping_received(self, channel, sender):
         """
         Abstract method to handle received messages.
 

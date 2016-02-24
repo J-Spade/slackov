@@ -86,6 +86,8 @@ class _processThread(threading.Thread):
             		self.bot.on_private_message_received(channel, sender, text)
 		else:
 			self.bot.on_name_ping_received(channel, sender)
+	    else:
+		self.bot.on_private_message_received(channel, sender, text)
         else:
             self.bot.on_message_received(channel, sender, text)
 

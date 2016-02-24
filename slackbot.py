@@ -59,7 +59,7 @@ class _processThread(threading.Thread):
                 if message[u'type'] == 'message':
                     if u'subtype' in message:
                         if message[u'subtype'] == 'channel_join':
-                            self.process_channel_join(message, msgtime)
+                            self.process_channel_join(message)
                     else:
                         self.process_message(message)
                 elif message[u'type'] == 'reaction_added':
@@ -109,7 +109,7 @@ class _processThread(threading.Thread):
             print print_message.format(channel, currtime, self.users[sender], timestamp)
             self.bot.on_reaction_received(channel, timestamp)
 
-    def process_channel_join(self, message, currtime):
+    def process_channel_join(self, message):
         """Handles processing for channel joins"""
         user_id = message[u'user']
         callargs = {'token': self.bot.TOKEN, 'user': user_id}

@@ -402,7 +402,7 @@ class _autoSaveThread(threading.Thread):
 	self.daemon = True
 
     def run(self):
-	while self.bot.process.is_alive():
+	while (1):
 	    time.sleep(3600)
 	    try:
                 self.bot.save_dictionary()

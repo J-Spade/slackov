@@ -54,8 +54,8 @@ class MarkovBot(slackbot.Slackbot):
 
     def on_message_received(self, target, sender, message):
         callargs = {'token': self.TOKEN, 'user': sender}
-        info = self.CLIENT.api_call('users.info', callargs)
-        sentByAdmin = json.loads(info)['user']['is_admin']
+        info = self.CLIENT.api_call('users.info', token=self.TOKEN, user=sender)
+        sentByAdmin = info['user']['is_admin']
 
         if self.do_commands(target, sender, message, sentByAdmin):
             return
@@ -84,8 +84,8 @@ class MarkovBot(slackbot.Slackbot):
         but will always get a response (if the bot can provide one)
         """
         callargs = {'token': self.TOKEN, 'user': sender}
-        info = self.CLIENT.api_call('users.info', callargs)
-        sentByAdmin = json.loads(info)['user']['is_admin']
+        info = self.CLIENT.api_call('users.info', token=self.TOKEN, user=sender)
+        sentByAdmin = info['user']['is_admin']
 
         if self.do_commands(channel, sender, message, sentByAdmin):
             return

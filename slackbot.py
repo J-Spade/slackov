@@ -115,8 +115,8 @@ class _processThread(threading.Thread):
         """Handles processing for channel joins"""
         user_id = message[u'user']
         callargs = {'token': self.bot.TOKEN, 'user': user_id}
-        info = self.client.api_call('users.info', callargs)
-        name = json.loads(info)['user']['name']
+        info = self.client.api_call('users.info', token=self.bot.TOKEN, user_id=message[u'user'])
+        name = info['user']['name']
         self.bot.users[user_id] = name
 	currtime = message[u'ts']
         print '::[{}] <{}> ((JOINED THE CHANNEL))'.format(currtime, name)
@@ -167,16 +167,15 @@ class Slackbot:
 
         if self.CLIENT.rtm_connect():
             print 'CONNECTED.'
-
-            channels = json.loads(self.CLIENT.api_call('channels.list', {}))['channels']
+            channels = self.CLIENT.api_call('channels.list')['channels']
             for chan in channels:
                 self.channelids.append(chan['id'])
-            privchannels = json.loads(self.CLIENT.api_call('groups.list', {}))['groups']
+            privchannels = self.CLIENT.api_call('groups.list')['groups']
             for chan in privchannels:
                 self.channelids.append(chan['id'])
             print 'CHANNELS: %s' % self.channelids
 
-            userlist = json.loads(self.CLIENT.api_call('users.list', {}))['members']
+            userlist = self.CLIENT.api_call('users.list')['members']
             for user in userlist:
                 self.users[user['id'].encode('utf-8')] = user['name'].encode('utf-8')
             print 'USERS: %s' % self.users

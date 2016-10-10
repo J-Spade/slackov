@@ -239,6 +239,8 @@ class MarkovBot(slackbot.Slackbot):
             words[i] = clean_url(words[i])
 
 	for word in words:
+            if !self.wordcounts.has_key(word):
+                self.wordcounts[word] = 0
             self.wordcounts[word] = self.wordcounts.get(word) + 1
 
         index = 0

@@ -11,6 +11,7 @@ import string
 import os
 import threading
 import time
+import math
 
 from twitbot import TwitterBot, clean_url
 
@@ -28,6 +29,10 @@ class MarkovBot(slackbot.Slackbot):
     DEFAULT_DICTIONARY = {STOPWORD: ([(STOPWORD, 1)], [(STOPWORD, 1)])}
     dictionary = copy.deepcopy(DEFAULT_DICTIONARY)
 
+    wordcounts = {STOPWORD: 0}
+    paircounts = {STOPWORD: 0}
+    sentences_ever = 0
+
     def __init__(self, client, slack, twitter):
         token = slack['token']
         user_id = slack['id']
@@ -43,10 +48,38 @@ class MarkovBot(slackbot.Slackbot):
         self.twitter = TwitterBot(consumer_key, consumer_secret, access_token, access_token_secret)
 
 	self.dictLock = threading.Lock()
+
 	print 'LOADING DICTIONARY...'
         try:
             self.load_dictionary()
-            print 'DICTIONARY LOADED SUCCESSFULLY'
+
+            print 'COUNTING WORDS...'            
+            for wordpair in self.dictionary:
+
+                temp = wordpair.split()
+                uses = 0
+                for temp in self.dictionary.get(wordpair)[0]:
+                    uses = uses + temp[1]
+                self.paircounts[wordpair] = uses
+
+                tally = 0
+                for prev in self.dictionary.get(wordpair)[0]:
+                    tally += prev[1]
+
+                first = wordpair.split()[0]
+                if not (self.wordcounts.has_key(first)):
+                    self.wordcounts[first] = 0
+                self.wordcounts[first] = self.wordcounts.get(first) + tally
+
+                if wordpair != self.STOPWORD:
+                    second = wordpair.split()[1]
+                    if not (self.wordcounts.has_key(second)):
+                        self.wordcounts[second] = 0
+                    self.wordcounts[second] = self.wordcounts.get(second) + tally
+
+            self.sentences_ever = self.wordcounts.get(self.STOPWORD)
+
+            print 'STARTING AUTOSAVER...'
 	    self.autosaver = _autoSaveThread(self)
 	    self.autosaver.start()
         except IOError:
@@ -199,9 +232,15 @@ class MarkovBot(slackbot.Slackbot):
         words.append(self.STOPWORD)
         words.insert(0, self.STOPWORD)
 
+        self.sentences_ever = self.sentences_ever + 1
+
         # find URLs, neaten them up
         for i in range(0, len(words)):
             words[i] = clean_url(words[i])
+
+	for word in words:
+            self.wordcounts[word] = self.wordcounts.get(word) + 1
+
         index = 0
         word = words[index]
         # cannot be out of range; at least (stop, stop, word, stop, stop)
@@ -262,21 +301,28 @@ class MarkovBot(slackbot.Slackbot):
         if len(words) < 2:
             return ''
 
-        # remove stuff we don't know
-        wordpair = ''
-        index = 0
-        seedcandidates = []
-        while index < len(words) - 1:
-            wordpair = words[index] + ' ' + words[index + 1]
-            if self.dictionary.has_key(wordpair):
-                seedcandidates.append(wordpair)
-            index = index + 1
-        if len(seedcandidates) == 0:
-            return ''
+
+        # try to guess which word is the most important
+        subject = self.STOPWORD
+        confidence = 0
+
+        for word in words:
+            if self.wordcounts.has_key(word):
+                tfidf = tf_idf(word, words, self.wordcounts, self.sentences_ever)
+                if tfidf > confidence:
+                    confidence = tfidf
+                    subject = word
+
+        # pick a word pair we've seen used with that word before as a seed
+        pairs = []
+        for wordpair in self.paircounts:
+            temp = wordpair.split()
+            if (temp[0] == subject) or ((len(temp) > 1) and (temp[1] == subject)):
+                pairs.append((wordpair, self.paircounts.get(wordpair)))
+
+        seed = choose_word_from_list(pairs)
 
         chain = ''
-
-        seed = random.choice(seedcandidates)
 
         # forwards
         wordpair = seed
@@ -435,3 +481,16 @@ def choose_word_from_list(word_list):
         if rand <= stops[index]:
             return word_list[index - 1][0]
     return word_list[0][0]
+
+def tf_idf(keyword, words, counts, totalcount):
+    
+    count = 0
+    for word in words:
+        if keyword == word:
+            count = count + 1
+    
+    tf = float(count)/len(words)
+
+    idf = math.log(float(totalcount) / counts.get(keyword))
+
+    return tf*idf

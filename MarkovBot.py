@@ -256,6 +256,10 @@ class MarkovBot(slackbot.Slackbot):
                 # this means we got to the end of the sentence
                 break
 
+            if not (self.paircounts.has_key(wordpair)):
+                self.paircounts[wordpair] = 0
+            self.paircounts[wordpair] = self.paircounts.get(wordpair) + 1
+
             # add 'next' as a word that comes after 'wordpair'
             if self.dictionary.has_key(wordpair):
                 temp = self.dictionary.get(wordpair)[1]
@@ -267,6 +271,7 @@ class MarkovBot(slackbot.Slackbot):
                     temp[wordindex] = (next, prevcount + 1)
             else:
                 self.dictionary[wordpair] = ([], [(next, 1)])
+
 
             # add 'word' as a word that comes before 'nextpair'
             if self.dictionary.has_key(nextpair):
@@ -290,6 +295,9 @@ class MarkovBot(slackbot.Slackbot):
 
     def generate_chain(self, message):
         """Generates a Markov chain from a message"""
+
+        self.dictLock.acquire()
+
         words = message.split()
         words.append(self.STOPWORD)
         words.insert(0, self.STOPWORD)
@@ -352,6 +360,8 @@ class MarkovBot(slackbot.Slackbot):
             wordpair = choose_word_from_list(
                 self.dictionary.get(wordpair)[0]) + \
                 u' ' + wordpair.split()[0]
+
+        self.dictLock.release()
 
         return chain.replace(self.STOPWORD, u'')
 

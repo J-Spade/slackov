@@ -199,7 +199,7 @@ class MarkovBot(slackbot.Slackbot):
             try:
                 self.talkBackFreq = float(message.split()[1])
                 self.send_message(target, ('RESPONDING PROBABILITY SET TO %3f' % self.talkBackFreq))
-            except (IndexError, TypeError, AttributeError):
+            except (IndexError, TypeError, ValueError):
                 self.send_message(target, 'MALFORMED COMMAND')
             return True
         elif sentByAdmin and ('!quit' in message):
